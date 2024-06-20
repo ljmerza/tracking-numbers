@@ -1,0 +1,15 @@
+{
+    "domain": "tracking_numbers",
+    "name": "Tracking Numbers",
+    "documentation": "https://github.com/ljmerza/tracking-numbers",
+    "dependencies": [],
+    "codeowners": [
+        "@ljmerza"
+    ],
+    "requirements": [
+        "beautifulsoup4==4.7.1",
+        "imapclient==2.3.1",
+        "mail-parser==3.9.3"
+    ],
+    "version": "1.0.0"
+}

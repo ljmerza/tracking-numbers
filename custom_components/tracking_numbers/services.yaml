@@ -1,0 +1,4 @@
+ignore_tracking_number:
+  description: Add Tracking Number to Ignored List
+unignore_tracking_number:
+  description: Remove Tracking Number from Ignored List
