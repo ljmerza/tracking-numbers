@@ -1,4 +1,22 @@
 ignore_tracking_number:
   description: Add Tracking Number to Ignored List
+  fields:
+    tracking_number:
+      description: Tracking Number
+      example: '1234567890'
+      required: true
+    entity_id:
+      description: Entity ID
+      example: sensor.user_gmail_com_tracking_numbers
+      required: true
 unignore_tracking_number:
   description: Remove Tracking Number from Ignored List
+  fields:
+    tracking_number:
+      description: Tracking Number
+      example: '1234567890'
+      required: true
+    entity_id:
+      description: Entity ID
+      example: sensor.user_gmail_com_tracking_numbers
+      required: true

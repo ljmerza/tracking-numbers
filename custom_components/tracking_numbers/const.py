@@ -1,12 +1,28 @@
-"""Constants for Email Platform."""
+"""Constants for Tracking Numbers integration."""
 
+# Domain
+DOMAIN = "tracking_numbers"
+
+# Configuration keys
 CONF_EMAIL = 'email'
 CONF_PASSWORD = 'password'
 CONF_IMAP_SERVER = 'imap_server'
 CONF_IMAP_PORT = 'imap_port'
 CONF_EMAIL_FOLDER = 'folder'
 CONF_SSL = 'ssl'
+CONF_USE_SSL = 'use_ssl'  # New name for consistency
 CONF_DAYS_OLD = 'days_old'
+CONF_SCAN_INTERVAL = 'scan_interval'
+CONF_MAX_PACKAGES = 'max_packages'
+
+# Defaults
+DEFAULT_IMAP_SERVER = 'imap.gmail.com'
+DEFAULT_IMAP_PORT = 993
+DEFAULT_USE_SSL = True
+DEFAULT_FOLDER = 'INBOX'
+DEFAULT_DAYS_OLD = 30
+DEFAULT_SCAN_INTERVAL = 30  # minutes
+DEFAULT_MAX_PACKAGES = 100
 
 ATTR_COUNT = 'count'
 ATTR_TRACKING_NUMBERS = 'tracking_numbers'

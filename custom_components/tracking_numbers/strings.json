@@ -1,0 +1,40 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Setup Tracking Numbers",
+        "description": "Connect your email account to track package deliveries",
+        "data": {
+          "email": "Email Address",
+          "password": "Password (App-Specific Password recommended)",
+          "imap_server": "IMAP Server",
+          "imap_port": "IMAP Port",
+          "use_ssl": "Use SSL"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to email server. Please check your settings.",
+      "invalid_auth": "Authentication failed. Please check your email and password.",
+      "timeout": "Connection timed out. Please try again.",
+      "unknown": "Unexpected error occurred"
+    },
+    "abort": {
+      "already_configured": "This email account is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Tracking Numbers Options",
+        "description": "Configure tracking number scanner settings",
+        "data": {
+          "days_old": "Days to scan (how far back to check emails)",
+          "folder": "Email folder to monitor",
+          "scan_interval": "Scan interval (minutes)",
+          "max_packages": "Maximum packages to store"
+        }
+      }
+    }
+  }
+}

@@ -45,6 +45,7 @@ Supported Emails
 - Ubiquiti
 - UPS
 - USPS
+- Wayfair
 - Wyze
 - Zazzle
 
