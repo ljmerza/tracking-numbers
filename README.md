@@ -16,6 +16,7 @@ Supported Emails
 - Dollar Shave Club
 - DSW
 - eBay
+- Etsy
 - FedEx
 - Gamestop
 - Georgia Power
@@ -25,6 +26,7 @@ Supported Emails
 - Litter Robot
 - Lowes
 - Manta Sleep
+- Moen
 - Monoprice
 - NewEgg
 - Nintendo

@@ -1,12 +1,14 @@
 """Parsers list and carrier detection for Tracking Numbers integration."""
 import logging
 import re
+from urllib.parse import urlparse
 
 from .const import (
     EMAIL_ATTR_FROM,
     EMAIL_ATTR_SUBJECT,
     EMAIL_ATTR_BODY,
     TRACKING_NUMBER_URLS,
+    CARRIER_LINK_HINTS,
     usps_regex,
     fedex_regex,
     ups_regex,
@@ -58,6 +60,8 @@ from .parsers.sony import ATTR_SONY, EMAIL_DOMAIN_SONY, parse_sony
 from .parsers.sylvane import ATTR_SYLVANE, EMAIL_DOMAIN_SYLVANE, parse_sylvane
 from .parsers.adafruit import ATTR_ADAFRUIT, EMAIL_DOMAIN_ADAFRUIT, parse_adafruit
 from .parsers.thriftbooks import ATTR_THRIFT_BOOKS, EMAIL_DOMAIN_THRIFT_BOOKS, parse_thrift_books
+from .parsers.etsy import ATTR_ETSY, EMAIL_DOMAIN_ETSY, parse_etsy
+from .parsers.moen import ATTR_MOEN, EMAIL_DOMAIN_MOEN, parse_moen
 from .parsers.lowes import ATTR_LOWES, EMAIL_DOMAIN_LOWES, parse_lowes
 from .parsers.wayfair import ATTR_WAYFAIR, EMAIL_DOMAIN_WAYFAIR, parse_wayfair
 from .parsers.generic import ATTR_GENERIC, EMAIL_DOMAIN_GENERIC, parse_generic
@@ -111,75 +115,104 @@ parsers = [
     (ATTR_SYLVANE, EMAIL_DOMAIN_SYLVANE, parse_sylvane),
     (ATTR_ADAFRUIT, EMAIL_DOMAIN_ADAFRUIT, parse_adafruit),
     (ATTR_THRIFT_BOOKS, EMAIL_DOMAIN_THRIFT_BOOKS, parse_thrift_books),
+    (ATTR_ETSY, EMAIL_DOMAIN_ETSY, parse_etsy),
+    (ATTR_MOEN, EMAIL_DOMAIN_MOEN, parse_moen),
     (ATTR_LOWES, EMAIL_DOMAIN_LOWES, parse_lowes),
     (ATTR_WAYFAIR, EMAIL_DOMAIN_WAYFAIR, parse_wayfair),
     (ATTR_GENERIC, EMAIL_DOMAIN_GENERIC, parse_generic),
 ]
 
 
+EMAIL_DOMAIN_CARRIER_MAP = {
+    EMAIL_DOMAIN_UPS: 'UPS',
+    EMAIL_DOMAIN_FEDEX: 'FedEx',
+    EMAIL_DOMAIN_USPS: 'USPS',
+    EMAIL_DOMAIN_DHL: 'DHL',
+    EMAIL_DOMAIN_SWISS_POST: 'Swiss Post',
+}
+
+
+def _carrier_from_link(link: str | None) -> str | None:
+    """Infer carrier from tracking link."""
+    if not link:
+        return None
+    link_str = str(link).strip()
+    if not link_str:
+        return None
+
+    lower_link = link_str.lower()
+    parsed = urlparse(lower_link if lower_link.startswith(('http://', 'https://')) else f'https://{lower_link}')
+    for carrier, hints in CARRIER_LINK_HINTS.items():
+        for hint in hints:
+            if not hint:
+                continue
+            if hint in lower_link:
+                return carrier
+            if parsed.netloc and hint in parsed.netloc:
+                return carrier
+            if parsed.path and hint in parsed.path:
+                return carrier
+    return None
+
+
+def _tracking_link_for(carrier: str, tracking_number: str) -> str:
+    """Build a tracking URL for a carrier."""
+    key = (carrier or '').lower().replace(' ', '_')
+    base = TRACKING_NUMBER_URLS.get(key, TRACKING_NUMBER_URLS['unknown'])
+    return f'{base}{tracking_number}'
+
+
 def find_carrier(tracking_group, email_domain):
     """Determine carrier from tracking number and email domain."""
     _LOGGER.debug(f'find_carrier email_domain: {email_domain} {tracking_group}')
 
-    link = ""
-    carrier = ""
+    tracking_number = str(tracking_group.get('tracking_number', '') or '').strip()
+    tracking_upper = tracking_number.upper()
+    tracking_lower = tracking_number.lower()
 
-    tracking_number = tracking_group['tracking_number']
+    link = tracking_group.get('link') or ''
+    carrier = tracking_group.get('carrier') or ''
 
-    # if tracking number is a url then use that
-    if tracking_number.startswith('http'):
+    if tracking_lower.startswith('http://') or tracking_lower.startswith('https://'):
         link = tracking_number
-        carrier = email_domain
+        if not carrier:
+            carrier = _carrier_from_link(link)
 
-    # if from carrier themself then use that
-    elif email_domain == EMAIL_DOMAIN_UPS:
-        link = TRACKING_NUMBER_URLS["ups"]
-        carrier = "UPS"
-    elif email_domain == EMAIL_DOMAIN_FEDEX:
-        link = TRACKING_NUMBER_URLS["fedex"]
-        carrier = "FedEx"
-    elif email_domain == EMAIL_DOMAIN_USPS:
-        link = TRACKING_NUMBER_URLS["usps"]
-        carrier = "USPS"
-    elif email_domain == EMAIL_DOMAIN_DHL:
-        link = TRACKING_NUMBER_URLS["dhl"]
-        carrier = "DHL"
-    elif email_domain == EMAIL_DOMAIN_SWISS_POST:
-        link = TRACKING_NUMBER_URLS["swiss_post"]
-        carrier = "Swiss Post"
+    if not carrier and link:
+        carrier = _carrier_from_link(link)
 
-    # regex tracking number
-    elif re.search(usps_regex, tracking_number) is not None:
-        link = TRACKING_NUMBER_URLS["usps"]
-        carrier = 'USPS'
-    elif re.search(ups_regex, tracking_number) is not None:
-        link = TRACKING_NUMBER_URLS["ups"]
-        carrier = 'UPS'
-    elif re.search(fedex_regex, tracking_number) is not None:
-        link = TRACKING_NUMBER_URLS["fedex"]
-        carrier = 'FedEx'
+    if not carrier:
+        carrier = EMAIL_DOMAIN_CARRIER_MAP.get(email_domain)
 
-    # try one more time
-    else:
-        isNumber = tracking_number.isnumeric()
-        length = len(tracking_number)
+    if not carrier and not tracking_lower.startswith('http'):
+        if re.search(usps_regex, tracking_upper):
+            carrier = 'USPS'
+        elif re.search(ups_regex, tracking_upper):
+            carrier = 'UPS'
+        elif re.search(fedex_regex, tracking_upper):
+            carrier = 'FedEx'
 
-        if (isNumber and (length == 12 or length == 15 or length == 20)):
-            link = TRACKING_NUMBER_URLS["fedex"]
-            carrier = "FedEx"
-        elif (isNumber and length == 22):
-            link = TRACKING_NUMBER_URLS["usps"]
-            carrier = "USPS"
-        elif (length > 25):
-            link = TRACKING_NUMBER_URLS["dhl"]
-            carrier = "DHL"
-        else:
-            link = TRACKING_NUMBER_URLS["unknown"]
-            carrier = email_domain
+    if not carrier and tracking_upper.isdigit():
+        length = len(tracking_upper)
+        if length in (12, 15, 20):
+            carrier = 'FedEx'
+        elif length in (22, 30):
+            carrier = 'USPS'
+        elif length >= 26:
+            carrier = 'DHL'
+
+    if not carrier:
+        carrier = email_domain or 'Unknown'
+
+    final_link = tracking_group.get('link') or link or _tracking_link_for(carrier, tracking_number)
+
+    if final_link and 'qtc_tLabels1' in final_link and 'qtc_tLabels1=' not in final_link:
+        prefix, _, remainder = final_link.partition('qtc_tLabels1')
+        final_link = f"{prefix}qtc_tLabels1={tracking_number}"
 
     return {
         'tracking_number': tracking_number,
         'carrier': tracking_group.get('carrier') or carrier,
         'origin': tracking_group.get('origin') or email_domain or carrier,
-        'link': tracking_group.get('link') or f'{link}{tracking_number}',
+        'link': final_link,
     }

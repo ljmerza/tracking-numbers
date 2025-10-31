@@ -39,11 +39,19 @@ EMAIL_DOMAIN_REGEX = r"@([\w.-]+)"
 
 TRACKING_NUMBER_URLS = {
   'ups': "https://www.ups.com/track?loc=en_US&tracknum=",
-  'usps': "https://tools.usps.com/go/TrackConfirmAction?tLabels=",
+  'usps': "https://tools.usps.com/go/TrackConfirmAction?qtc_tLabels1=",
   'fedex': "https://www.fedex.com/apps/fedextrack/?tracknumbers=",
   'dhl': 'https://www.logistics.dhl/us-en/home/tracking/tracking-parcel.html?submit=1&tracking-id=',
   'swiss_post': 'https://www.swisspost.ch/track?formattedParcelCodes=',
   'unknown': 'https://www.google.com/search?q=',
+}
+
+CARRIER_LINK_HINTS = {
+  'UPS': ('ups.com',),
+  'USPS': ('usps.com', 'postalpro.usps.com', 'mailviewrecipient.com'),
+  'FedEx': ('fedex.com', 'fxtracking', 'fedexdeliverymanager'),
+  'DHL': ('dhl.com', 'dhl.de', 'dhlparcel', 'dhlglobalmail'),
+  'Swiss Post': ('swisspost.ch', 'swiss-post', 'post.ch'),
 }
 
    
@@ -52,7 +60,8 @@ usps_pattern = [
     '^(94|93|92|94|95)[0-9]{22}$',
     '^(70|14|23|03)[0-9]{14}$',
     '^(M0|82)[0-9]{8}$',
-    '^([A-Z]{2})[0-9]{9}([A-Z]{2})$'
+    '^([A-Z]{2})[0-9]{9}([A-Z]{2})$',
+    '^(420)[0-9]{27}$'
 ]
 
 ups_pattern = [
