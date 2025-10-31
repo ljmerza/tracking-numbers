@@ -14,6 +14,8 @@ def parse_adam_and_eve(email):
     """Parse Adam & Eve tracking numbers."""
     tracking_numbers = []
 
+    _LOGGER.debug(f"[Adam Eve] Starting parser")
+
     soup = BeautifulSoup(email[EMAIL_ATTR_BODY], 'html.parser')
     linkTexts = [link.text for link in soup.find_all('a')]
     for linkText in linkTexts:
@@ -23,4 +25,5 @@ def parse_adam_and_eve(email):
         if match and match.group(1).isnumeric() and match.group(1) not in tracking_numbers:
             tracking_numbers.append(match.group(1))
 
+    _LOGGER.debug(f"[Adam Eve] Parser complete - Found {len(tracking_numbers)} tracking number(s)")
     return tracking_numbers

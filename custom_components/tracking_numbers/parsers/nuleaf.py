@@ -14,6 +14,8 @@ def parse_nuleaf(email):
     """Parse NuLeaf tracking numbers."""
     tracking_numbers = []
 
+    _LOGGER.debug(f"[Nuleaf] Starting parser")
+
     soup = BeautifulSoup(email[EMAIL_ATTR_BODY], 'html.parser')
     elements = soup.find_all('a')
     for element in elements:
@@ -25,4 +27,5 @@ def parse_nuleaf(email):
             if tracking_number and tracking_number not in tracking_numbers:
                 tracking_numbers.append(tracking_number)
 
+    _LOGGER.debug(f"[Nuleaf] Parser complete - Found {len(tracking_numbers)} tracking number(s)")
     return tracking_numbers

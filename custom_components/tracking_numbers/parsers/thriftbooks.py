@@ -17,6 +17,8 @@ def parse_thrift_books(email):
     """Parse thrift books tracking numbers."""
     tracking_numbers = []
 
+    _LOGGER.debug(f"[Thriftbooks] Starting parser")
+
     soup = BeautifulSoup(email[EMAIL_ATTR_BODY], 'html.parser')
     elements = soup.find_all('a')
 
@@ -40,4 +42,5 @@ def parse_thrift_books(email):
         except:
             pass
 
+    _LOGGER.debug(f"[Thriftbooks] Parser complete - Found {len(tracking_numbers)} tracking number(s)")
     return tracking_numbers

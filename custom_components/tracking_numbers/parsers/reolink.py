@@ -14,6 +14,8 @@ def parse_reolink(email):
     """Parse Reolink tracking numbers."""
     tracking_numbers = []
 
+    _LOGGER.debug(f"[Reolink] Starting parser")
+
     soup = BeautifulSoup(email[EMAIL_ATTR_BODY], 'html.parser')
     links = [link.get('href') for link in soup.find_all('a')]
 
@@ -29,4 +31,5 @@ def parse_reolink(email):
         if match and match.group(1) not in tracking_numbers:
             tracking_numbers.append(match.group(1))
 
+    _LOGGER.debug(f"[Reolink] Parser complete - Found {len(tracking_numbers)} tracking number(s)")
     return tracking_numbers

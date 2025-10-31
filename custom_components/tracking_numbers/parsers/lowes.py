@@ -12,6 +12,9 @@ EMAIL_DOMAIN_LOWES = 'lowes.com'
 def parse_lowes(email):
     """Parse Lowes tracking numbers."""
     tracking_numbers = []
+    subject = email.get(EMAIL_ATTR_SUBJECT, 'N/A')
+
+    _LOGGER.debug(f"[Lowes] Starting parser - Subject: {subject}")
 
     soup = BeautifulSoup(email[EMAIL_ATTR_BODY], 'html.parser')
     elements = soup.find_all('span')
@@ -28,4 +31,5 @@ def parse_lowes(email):
                 'tracking_number': order_number.group(1)
               })
 
+    _LOGGER.debug(f"[Lowes] Parser complete - Found {len(tracking_numbers)} tracking number(s)")
     return tracking_numbers

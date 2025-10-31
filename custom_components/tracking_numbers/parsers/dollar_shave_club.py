@@ -13,6 +13,8 @@ def parse_dollar_shave_club(email):
     """Parse Dollar Shave Club tracking numbers."""
     tracking_numbers = []
 
+    _LOGGER.debug(f"[Dollar Shave Club] Starting parser")
+
     soup = BeautifulSoup(email[EMAIL_ATTR_BODY], 'html.parser')
     elements = soup.find_all('a')
     for element in elements:
@@ -25,4 +27,5 @@ def parse_dollar_shave_club(email):
             if match and match.group(1) not in tracking_numbers:
                 tracking_numbers.append(match.group(1))
 
+    _LOGGER.debug(f"[Dollar Shave Club] Parser complete - Found {len(tracking_numbers)} tracking number(s)")
     return tracking_numbers

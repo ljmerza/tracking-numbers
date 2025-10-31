@@ -13,6 +13,8 @@ def parse_guitar_center(email):
     """Parse Guitar Center tracking numbers."""
     tracking_numbers = []
 
+    _LOGGER.debug(f"[Guitar Center] Starting parser")
+
     soup = BeautifulSoup(email[EMAIL_ATTR_BODY], 'html.parser')
     elements = [element for element in soup.find_all('td')]
     for element in elements:
@@ -22,4 +24,5 @@ def parse_guitar_center(email):
             if tracking_number not in tracking_numbers:
                 tracking_numbers.append(tracking_number)
 
+    _LOGGER.debug(f"[Guitar Center] Parser complete - Found {len(tracking_numbers)} tracking number(s)")
     return tracking_numbers

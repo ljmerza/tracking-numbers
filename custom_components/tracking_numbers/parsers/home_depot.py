@@ -18,6 +18,8 @@ def parse_home_depot(email):
     """Parse home depot tracking numbers."""
     tracking_numbers = []
 
+    _LOGGER.debug(f"[Home Depot] Starting parser")
+
     soup = BeautifulSoup(email[EMAIL_ATTR_BODY], 'html.parser')
     elements = soup.find_all('a')
 
@@ -39,4 +41,5 @@ def parse_home_depot(email):
             })
 
 
+    _LOGGER.debug(f"[Home Depot] Parser complete - Found {len(tracking_numbers)} tracking number(s)")
     return tracking_numbers

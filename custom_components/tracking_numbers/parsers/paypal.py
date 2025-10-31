@@ -14,6 +14,8 @@ def parse_paypal(email):
     """Parse Paypal tracking numbers."""
     tracking_numbers = []
 
+    _LOGGER.debug(f"[Paypal] Starting parser")
+
     soup = BeautifulSoup(email[EMAIL_ATTR_BODY], 'html.parser')
     links = [link.get('href') for link in soup.find_all('a')]
     for link in links:
@@ -23,4 +25,5 @@ def parse_paypal(email):
         if match and match.group(1) not in tracking_numbers:
             tracking_numbers.append(match.group(1))
 
+    _LOGGER.debug(f"[Paypal] Parser complete - Found {len(tracking_numbers)} tracking number(s)")
     return tracking_numbers

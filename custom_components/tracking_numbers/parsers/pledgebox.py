@@ -14,6 +14,8 @@ def parse_pledgebox(email):
     """Parse Pledge Box tracking numbers."""
     tracking_numbers = []
 
+    _LOGGER.debug(f"[Pledgebox] Starting parser")
+
     soup = BeautifulSoup(email[EMAIL_ATTR_BODY], 'html.parser')
     lines = [element.text for element in soup.find_all('td')]
     for line in lines:
@@ -29,4 +31,5 @@ def parse_pledgebox(email):
         if tracking_number not in tracking_numbers:
             tracking_numbers.append(tracking_number)
 
+    _LOGGER.debug(f"[Pledgebox] Parser complete - Found {len(tracking_numbers)} tracking number(s)")
     return tracking_numbers

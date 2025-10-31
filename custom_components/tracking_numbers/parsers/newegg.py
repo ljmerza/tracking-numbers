@@ -14,6 +14,8 @@ def parse_newegg(email):
     """Parse Newegg tracking numbers."""
     tracking_numbers = []
 
+    _LOGGER.debug(f"[Newegg] Starting parser")
+
     soup = BeautifulSoup(email[EMAIL_ATTR_BODY], 'html.parser')
 
     link_urls = [link.get('href') for link in soup.find_all('a')]
@@ -39,4 +41,5 @@ def parse_newegg(email):
                 if link_text not in tracking_numbers:
                     tracking_numbers.append(link_text)
 
+    _LOGGER.debug(f"[Newegg] Parser complete - Found {len(tracking_numbers)} tracking number(s)")
     return tracking_numbers

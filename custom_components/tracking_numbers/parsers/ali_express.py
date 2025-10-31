@@ -14,6 +14,8 @@ def parse_ali_express(email):
     """Parse Ali Express tracking numbers."""
     tracking_numbers = []
 
+    _LOGGER.debug(f"[Ali Express] Starting parser")
+
     soup = BeautifulSoup(email[EMAIL_ATTR_BODY], 'html.parser')
     
     lines = [p_element.text for p_element in soup.find_all('p')]
@@ -39,4 +41,5 @@ def parse_ali_express(email):
                     'tracking_number': order_number
                 })
 
+    _LOGGER.debug(f"[Ali Express] Parser complete - Found {len(tracking_numbers)} tracking number(s)")
     return tracking_numbers

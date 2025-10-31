@@ -14,6 +14,8 @@ def parse_manta_sleep(email):
     """Parse Manta Sleep tracking numbers."""
     tracking_numbers = []
 
+    _LOGGER.debug(f"[Manta Sleep] Starting parser")
+
     soup = BeautifulSoup(email[EMAIL_ATTR_BODY], 'html.parser')
 
     link_urls = [link.get('href') for link in soup.find_all('a')]
@@ -24,4 +26,5 @@ def parse_manta_sleep(email):
         if match and match.group(1) not in tracking_numbers:
             tracking_numbers.append(match.group(1))
 
+    _LOGGER.debug(f"[Manta Sleep] Parser complete - Found {len(tracking_numbers)} tracking number(s)")
     return tracking_numbers

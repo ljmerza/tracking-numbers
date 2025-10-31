@@ -13,6 +13,8 @@ def parse_timeless(email):
     """Parse timeless tracking numbers."""
     tracking_numbers = []
 
+    _LOGGER.debug(f"[Timeless] Starting parser")
+
     soup = BeautifulSoup(email[EMAIL_ATTR_BODY], 'html.parser')
     elements = soup.find_all('a')
     for element in elements:
@@ -23,4 +25,5 @@ def parse_timeless(email):
         if match and match.group(1) not in tracking_numbers:
             tracking_numbers.append(match.group(1))
 
+    _LOGGER.debug(f"[Timeless] Parser complete - Found {len(tracking_numbers)} tracking number(s)")
     return tracking_numbers

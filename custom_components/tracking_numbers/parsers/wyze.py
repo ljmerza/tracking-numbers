@@ -14,6 +14,8 @@ def parse_wyze(email):
     """Parse Wyze tracking numbers."""
     tracking_numbers = []
 
+    _LOGGER.debug(f"[Wyze] Starting parser")
+
     soup = BeautifulSoup(email[EMAIL_ATTR_BODY], 'html.parser')
     links = [link.get('href') for link in soup.find_all('a')]
     for link in links:
@@ -29,4 +31,5 @@ def parse_wyze(email):
             tracking_numbers.append(tracking_number)
 
 
+    _LOGGER.debug(f"[Wyze] Parser complete - Found {len(tracking_numbers)} tracking number(s)")
     return tracking_numbers
