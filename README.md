@@ -87,6 +87,10 @@ sensor:
 | ssl         | boolean | **Optional** | `true` enable or disable SSL when using IMAP                          |
 | days_old    | number  | **Optional** | `30` how many days of emails to retrieve                              |
 
+## Manual Tracking Numbers
+
+If you have a package that is not captured via email, call the `tracking_numbers.add_manual_tracking_number` service (or use the lovelace card's add button) to save it alongside your parsed deliveries. Provide the target sensor's `entity_id`, the `tracking_number`, and optionally a `link`, `carrier`, `origin`, or `status` string. Use `tracking_numbers.remove_tracking_number` to delete a manual entry or hide a tracking number that was parsed from email.
+
 ---
 
 Enjoy my card? Help me out for a couple of :beers: or a :coffee:!

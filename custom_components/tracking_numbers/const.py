@@ -3,6 +3,10 @@
 # Domain
 DOMAIN = "tracking_numbers"
 
+# Services
+SERVICE_ADD_MANUAL_TRACKING_NUMBER = "add_manual_tracking_number"
+SERVICE_REMOVE_TRACKING_NUMBER = "remove_tracking_number"
+
 # Configuration keys
 CONF_EMAIL = 'email'
 CONF_PASSWORD = 'password'
@@ -30,6 +34,7 @@ ATTR_TRACKING_NUMBERS = 'tracking_numbers'
 EMAIL_ATTR_FROM = 'from'
 EMAIL_ATTR_SUBJECT = 'subject'
 EMAIL_ATTR_BODY = 'body'
+EMAIL_ATTR_DATE = 'date'
 
 USPS_TRACKING_NUMBER_REGEX = r"\b(94\d{20}|\d{4}\s\d{4}\s\d{4}\s\d{4}\s\d{4}\s\d{2})\b"
 UPS_TRACKING_NUMBER_REGEX = r"\b(1Z[A-HJ-NP-Z0-9]{16})\b"
@@ -53,6 +58,13 @@ CARRIER_LINK_HINTS = {
   'DHL': ('dhl.com', 'dhl.de', 'dhlparcel', 'dhlglobalmail'),
   'Swiss Post': ('swisspost.ch', 'swiss-post', 'post.ch'),
 }
+
+MANUAL_RETAILER_CODE = 'manual_entry'
+MANUAL_ORIGIN_FALLBACK = 'Manual Entry'
+MANUAL_CARRIER_FALLBACK = 'Custom'
+STORE_KEY_MANUAL_PACKAGES = 'manual_packages'
+STORE_KEY_HIDDEN_TRACKING_NUMBERS = 'hidden_tracking_numbers'
+LEGACY_STORE_KEY_IGNORED = 'ignored_tracking_numbers'
 
    
 usps_pattern = [

@@ -36,5 +36,51 @@
         }
       }
     }
+  },
+  "services": {
+    "add_manual_tracking_number": {
+      "name": "Add manual tracking number",
+      "description": "Store a tracking number without an email match so it appears in the card.",
+      "fields": {
+        "tracking_number": {
+          "name": "Tracking number",
+          "description": "Identifier you want to track"
+        },
+        "entity_id": {
+          "name": "Target sensor",
+          "description": "Tracking Numbers sensor that should receive the manual entry"
+        },
+        "link": {
+          "name": "Tracking link",
+          "description": "Optional URL that opens when the entry is tapped"
+        },
+        "carrier": {
+          "name": "Carrier",
+          "description": "Displayed carrier name"
+        },
+        "origin": {
+          "name": "Origin",
+          "description": "Retailer or sender label"
+        },
+        "status": {
+          "name": "Status",
+          "description": "Optional status text"
+        }
+      }
+    },
+    "remove_tracking_number": {
+      "name": "Remove tracking number",
+      "description": "Delete a manual entry or hide a tracking number pulled from email.",
+      "fields": {
+        "tracking_number": {
+          "name": "Tracking number",
+          "description": "Identifier to remove or hide"
+        },
+        "entity_id": {
+          "name": "Target sensor",
+          "description": "Tracking Numbers sensor that should remove the entry"
+        }
+      }
+    }
   }
 }

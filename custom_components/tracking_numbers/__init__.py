@@ -9,7 +9,11 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.typing import ConfigType
 import voluptuous as vol
 
-from .const import DOMAIN
+from .const import (
+    DOMAIN,
+    SERVICE_ADD_MANUAL_TRACKING_NUMBER,
+    SERVICE_REMOVE_TRACKING_NUMBER,
+)
 from .coordinator import TrackingNumbersCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,13 +27,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data.setdefault(DOMAIN, {})
     return True
 
-SERVICE_IGNORE_TRACKING_NUMBER = "ignore_tracking_number"
-SERVICE_UNIGNORE_TRACKING_NUMBER = "unignore_tracking_number"
 SERVICE_REFRESH = "refresh"
 
-SERVICE_SCHEMA = vol.Schema({
-    vol.Required("tracking_number"): str,
-    vol.Optional("entity_id"): str,
+SERVICE_ADD_MANUAL_SCHEMA = vol.Schema({
+    vol.Required("tracking_number"): vol.Coerce(str),
+    vol.Required("entity_id"): str,
+    vol.Optional("link"): vol.Coerce(str),
+    vol.Optional("carrier"): vol.Coerce(str),
+    vol.Optional("origin"): vol.Coerce(str),
+    vol.Optional("status"): vol.Coerce(str),
+})
+
+SERVICE_REMOVE_TRACKING_SCHEMA = vol.Schema({
+    vol.Required("tracking_number"): vol.Coerce(str),
+    vol.Required("entity_id"): str,
 })
 
 
@@ -58,7 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
     # Register services (only once)
-    if not hass.services.has_service(DOMAIN, SERVICE_IGNORE_TRACKING_NUMBER):
+    if not hass.services.has_service(DOMAIN, SERVICE_ADD_MANUAL_TRACKING_NUMBER):
         await async_setup_services(hass)
 
     return True
@@ -80,57 +91,65 @@ async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 async def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services for Tracking Numbers integration."""
 
-    async def ignore_tracking_number(call: ServiceCall) -> None:
-        """Service to ignore a tracking number."""
-        tracking_number = call.data["tracking_number"]
-        entity_id = call.data.get("entity_id")
+    def _resolve_coordinator(entity_id: str | None) -> TrackingNumbersCoordinator | None:
+        if not hass.data.get(DOMAIN):
+            return None
 
-        # Find the coordinator
-        coordinator = None
         if entity_id:
-            # Try to find coordinator by entity_id
             for coord in hass.data[DOMAIN].values():
                 if isinstance(coord, TrackingNumbersCoordinator):
-                    coordinator = coord
-                    break
-        else:
-            # Use first coordinator if no entity_id specified
-            for coord in hass.data[DOMAIN].values():
-                if isinstance(coord, TrackingNumbersCoordinator):
-                    coordinator = coord
-                    break
+                    return coord
+            return None
 
-        if coordinator:
-            await coordinator.async_ignore_tracking_number(tracking_number)
-            _LOGGER.info("Ignored tracking number: %s", tracking_number)
-        else:
-            _LOGGER.error("No coordinator found to ignore tracking number")
+        for coord in hass.data[DOMAIN].values():
+            if isinstance(coord, TrackingNumbersCoordinator):
+                return coord
 
-    async def unignore_tracking_number(call: ServiceCall) -> None:
-        """Service to unignore a tracking number."""
-        tracking_number = call.data["tracking_number"]
+        return None
+
+    async def add_manual_tracking_number(call: ServiceCall) -> None:
+        """Service to add a manual tracking number."""
         entity_id = call.data.get("entity_id")
+        coordinator = _resolve_coordinator(entity_id)
 
-        # Find the coordinator
-        coordinator = None
-        if entity_id:
-            # Try to find coordinator by entity_id
-            for coord in hass.data[DOMAIN].values():
-                if isinstance(coord, TrackingNumbersCoordinator):
-                    coordinator = coord
-                    break
-        else:
-            # Use first coordinator if no entity_id specified
-            for coord in hass.data[DOMAIN].values():
-                if isinstance(coord, TrackingNumbersCoordinator):
-                    coordinator = coord
-                    break
+        if not coordinator:
+            _LOGGER.error("No coordinator found to add manual tracking number")
+            return
 
-        if coordinator:
-            await coordinator.async_unignore_tracking_number(tracking_number)
-            _LOGGER.info("Unignored tracking number: %s", tracking_number)
-        else:
-            _LOGGER.error("No coordinator found to unignore tracking number")
+        tracking_number = call.data["tracking_number"]
+        link = call.data.get("link")
+        carrier = call.data.get("carrier")
+        origin = call.data.get("origin")
+        status = call.data.get("status")
+
+        try:
+            await coordinator.async_add_manual_package(
+                tracking_number,
+                link=link,
+                carrier=carrier,
+                origin=origin,
+                status=status,
+            )
+            _LOGGER.info("Added manual tracking number: %s", tracking_number)
+        except ValueError as err:
+            _LOGGER.error("Failed to add manual tracking number: %s", err)
+
+    async def remove_tracking_number(call: ServiceCall) -> None:
+        """Service to remove or hide a tracking number."""
+        entity_id = call.data.get("entity_id")
+        coordinator = _resolve_coordinator(entity_id)
+
+        if not coordinator:
+            _LOGGER.error("No coordinator found to remove tracking number")
+            return
+
+        tracking_number = call.data["tracking_number"]
+
+        try:
+            await coordinator.async_remove_tracking_number(tracking_number)
+            _LOGGER.info("Removed tracking number: %s", tracking_number)
+        except ValueError as err:
+            _LOGGER.error("Failed to remove tracking number: %s", err)
 
     async def refresh(call: ServiceCall) -> None:
         """Service to force refresh."""
@@ -144,16 +163,16 @@ async def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_IGNORE_TRACKING_NUMBER,
-        ignore_tracking_number,
-        schema=SERVICE_SCHEMA,
+        SERVICE_ADD_MANUAL_TRACKING_NUMBER,
+        add_manual_tracking_number,
+        schema=SERVICE_ADD_MANUAL_SCHEMA,
     )
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_UNIGNORE_TRACKING_NUMBER,
-        unignore_tracking_number,
-        schema=SERVICE_SCHEMA,
+        SERVICE_REMOVE_TRACKING_NUMBER,
+        remove_tracking_number,
+        schema=SERVICE_REMOVE_TRACKING_SCHEMA,
     )
 
     hass.services.async_register(

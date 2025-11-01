@@ -1,22 +1,38 @@
-ignore_tracking_number:
-  description: Add Tracking Number to Ignored List
+add_manual_tracking_number:
+  description: Add a manual tracking number entry
   fields:
     tracking_number:
       description: Tracking Number
-      example: '1234567890'
+      example: '1Z9999999999999999'
       required: true
     entity_id:
-      description: Entity ID
+      description: Target Tracking Numbers sensor entity ID
       example: sensor.user_gmail_com_tracking_numbers
       required: true
-unignore_tracking_number:
-  description: Remove Tracking Number from Ignored List
+    link:
+      description: Optional tracking URL to open from the card
+      example: 'https://www.ups.com/track?loc=en_US&tracknum=1Z9999999999999999'
+      required: false
+    carrier:
+      description: Carrier name (UPS, USPS, etc.)
+      example: 'UPS'
+      required: false
+    origin:
+      description: Retailer or sender label
+      example: 'Custom Order'
+      required: false
+    status:
+      description: Optional status text to display
+      example: 'Out for delivery'
+      required: false
+remove_tracking_number:
+  description: Remove a manual tracking number or hide an email-derived package
   fields:
     tracking_number:
-      description: Tracking Number
-      example: '1234567890'
+      description: Tracking Number to remove or hide
+      example: '1Z9999999999999999'
       required: true
     entity_id:
-      description: Entity ID
+      description: Target Tracking Numbers sensor entity ID
       example: sensor.user_gmail_com_tracking_numbers
       required: true
