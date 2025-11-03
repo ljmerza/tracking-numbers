@@ -1,17 +1,19 @@
 {
     "domain": "tracking_numbers",
     "name": "Tracking Numbers",
-    "documentation": "https://github.com/ljmerza/tracking-numbers",
-    "dependencies": [],
     "codeowners": [
         "@ljmerza"
     ],
+    "config_flow": true,
+    "dependencies": [],
+    "documentation": "https://github.com/ljmerza/tracking-numbers",
+    "integration_type": "service",
+    "iot_class": "cloud_polling",
+    "issue_tracker": "https://github.com/ljmerza/tracking-numbers/issues",
     "requirements": [
         "beautifulsoup4==4.7.1",
         "imapclient==2.3.1",
         "mail-parser==3.9.3"
     ],
-    "config_flow": true,
-    "iot_class": "cloud_polling",
     "version": "2.0.0"
 }
