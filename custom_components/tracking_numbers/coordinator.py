@@ -121,8 +121,13 @@ class TrackingNumbersCoordinator(DataUpdateCoordinator):
         use_ssl = self.config.get(CONF_USE_SSL, True)
         email = self.config[CONF_EMAIL]
         password = self.config[CONF_PASSWORD]
-        folder = self.options.get(CONF_EMAIL_FOLDER, DEFAULT_FOLDER)
-        days_old = self.options.get(CONF_DAYS_OLD, DEFAULT_DAYS_OLD)
+        folder = self.options.get(
+            CONF_EMAIL_FOLDER, self.config.get(CONF_EMAIL_FOLDER, DEFAULT_FOLDER)
+        )
+        days_old_setting = self.options.get(
+            CONF_DAYS_OLD, self.config.get(CONF_DAYS_OLD, DEFAULT_DAYS_OLD)
+        )
+        days_old = max(1, days_old_setting)
 
         # Date range for email search
         search_date = date.today() - timedelta(days=days_old)

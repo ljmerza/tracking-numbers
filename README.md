@@ -7,6 +7,7 @@ Supported Emails
 - Adafruit
 - Adam & Eve
 - Amazon
+- Amazon DE
 - Ali Express
 - B&H Photo
 - Bespoke Post
@@ -23,7 +24,10 @@ Supported Emails
 - Google Express
 - Groupon
 - Guitar Center
+- Home Depot
+- House of Noa
 - Litter Robot
+- Loog Guitars
 - Lowes
 - Manta Sleep
 - Moen
@@ -48,6 +52,7 @@ Supported Emails
 - UPS
 - USPS
 - Wayfair
+- Western Digital
 - Wyze
 - Zazzle
 

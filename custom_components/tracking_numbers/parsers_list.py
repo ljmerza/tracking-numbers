@@ -43,6 +43,7 @@ from .parsers.chewy import ATTR_CHEWY, EMAIL_DOMAIN_CHEWY, parse_chewy
 from .parsers.groupon import ATTR_GROUPON, EMAIL_DOMAIN_GROUPON, parse_groupon
 from .parsers.zazzle import ATTR_ZAZZLE, EMAIL_DOMAIN_ZAZZLE, parse_zazzle
 from .parsers.home_depot import ATTR_HOME_DEPOT, EMAIL_DOMAIN_HOME_DEPOT, parse_home_depot
+from .parsers.house_of_noa import ATTR_HOUSE_OF_NOA, EMAIL_DOMAIN_HOUSE_OF_NOA, parse_house_of_noa
 from .parsers.swiss_post import ATTR_SWISS_POST, EMAIL_DOMAIN_SWISS_POST, parse_swiss_post
 from .parsers.bespoke_post import ATTR_DSW as ATTR_BESPOKE, EMAIL_DOMAIN_DSW as EMAIL_DOMAIN_BESPOKE, parse_bespoke_post
 from .parsers.manta_sleep import ATTR_MANTA_SLEEP, EMAIL_DOMAIN_MANTA_SLEEP, parse_manta_sleep
@@ -58,6 +59,7 @@ from .parsers.pledgebox import ATTR_PLEDGEBOX, EMAIL_DOMAIN_PLEDGEBOX, parse_ple
 from .parsers.guitar_center import ATTR_GUITAR_CENTER, EMAIL_DOMAIN_GUITAR_CENTER, parse_guitar_center
 from .parsers.sony import ATTR_SONY, EMAIL_DOMAIN_SONY, parse_sony
 from .parsers.sylvane import ATTR_SYLVANE, EMAIL_DOMAIN_SYLVANE, parse_sylvane
+from .parsers.loog_guitars import ATTR_LOOG_GUITARS, EMAIL_DOMAIN_LOOG_GUITARS, parse_loog_guitars
 from .parsers.adafruit import ATTR_ADAFRUIT, EMAIL_DOMAIN_ADAFRUIT, parse_adafruit
 from .parsers.thriftbooks import ATTR_THRIFT_BOOKS, EMAIL_DOMAIN_THRIFT_BOOKS, parse_thrift_books
 from .parsers.etsy import ATTR_ETSY, EMAIL_DOMAIN_ETSY, parse_etsy
@@ -98,6 +100,7 @@ parsers = [
     (ATTR_GROUPON, EMAIL_DOMAIN_GROUPON, parse_groupon),
     (ATTR_ZAZZLE, EMAIL_DOMAIN_ZAZZLE, parse_zazzle),
     (ATTR_HOME_DEPOT, EMAIL_DOMAIN_HOME_DEPOT, parse_home_depot),
+    (ATTR_HOUSE_OF_NOA, EMAIL_DOMAIN_HOUSE_OF_NOA, parse_house_of_noa),
     (ATTR_SWISS_POST, EMAIL_DOMAIN_SWISS_POST, parse_swiss_post),
     (ATTR_BESPOKE, EMAIL_DOMAIN_BESPOKE, parse_bespoke_post),
     (ATTR_MANTA_SLEEP, EMAIL_DOMAIN_MANTA_SLEEP, parse_manta_sleep),
@@ -113,6 +116,7 @@ parsers = [
     (ATTR_GUITAR_CENTER, EMAIL_DOMAIN_GUITAR_CENTER, parse_guitar_center),
     (ATTR_SONY, EMAIL_DOMAIN_SONY, parse_sony),
     (ATTR_SYLVANE, EMAIL_DOMAIN_SYLVANE, parse_sylvane),
+    (ATTR_LOOG_GUITARS, EMAIL_DOMAIN_LOOG_GUITARS, parse_loog_guitars),
     (ATTR_ADAFRUIT, EMAIL_DOMAIN_ADAFRUIT, parse_adafruit),
     (ATTR_THRIFT_BOOKS, EMAIL_DOMAIN_THRIFT_BOOKS, parse_thrift_books),
     (ATTR_ETSY, EMAIL_DOMAIN_ETSY, parse_etsy),
