@@ -44,6 +44,7 @@ Supported Emails
 - Sylvane
 - Sony
 - Swiss Post
+- SwitchBot
 - Target
 - Thriftbooks
 - Timeless

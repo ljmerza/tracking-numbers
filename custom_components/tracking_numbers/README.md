@@ -175,7 +175,7 @@ automation:
 - Swiss Post
 
 ### Retailers (50+)
-Amazon, eBay, PayPal, AliExpress, Newegg, Best Buy, Home Depot, Lowe's, Target, Walmart, Chewy, Groupon, GameStop, Nintendo, Sony, Adafruit, Monoprice, B&H Photo, RockAuto, Wyze, Ubiquiti, Reolink, and many more...
+Amazon, eBay, PayPal, AliExpress, Newegg, Best Buy, Home Depot, Lowe's, Target, Walmart, Chewy, Groupon, GameStop, Nintendo, Sony, SwitchBot, Adafruit, Monoprice, B&H Photo, RockAuto, Wyze, Ubiquiti, Reolink, and many more...
 
 ## Troubleshooting
 

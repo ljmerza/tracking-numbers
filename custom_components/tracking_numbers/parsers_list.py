@@ -66,6 +66,7 @@ from .parsers.etsy import ATTR_ETSY, EMAIL_DOMAIN_ETSY, parse_etsy
 from .parsers.moen import ATTR_MOEN, EMAIL_DOMAIN_MOEN, parse_moen
 from .parsers.lowes import ATTR_LOWES, EMAIL_DOMAIN_LOWES, parse_lowes
 from .parsers.wayfair import ATTR_WAYFAIR, EMAIL_DOMAIN_WAYFAIR, parse_wayfair
+from .parsers.switchbot import ATTR_SWITCHBOT, EMAIL_DOMAIN_SWITCHBOT, parse_switchbot
 from .parsers.generic import ATTR_GENERIC, EMAIL_DOMAIN_GENERIC, parse_generic
 
 _LOGGER = logging.getLogger(__name__)
@@ -123,6 +124,7 @@ parsers = [
     (ATTR_MOEN, EMAIL_DOMAIN_MOEN, parse_moen),
     (ATTR_LOWES, EMAIL_DOMAIN_LOWES, parse_lowes),
     (ATTR_WAYFAIR, EMAIL_DOMAIN_WAYFAIR, parse_wayfair),
+    (ATTR_SWITCHBOT, EMAIL_DOMAIN_SWITCHBOT, parse_switchbot),
     (ATTR_GENERIC, EMAIL_DOMAIN_GENERIC, parse_generic),
 ]
 
