@@ -93,6 +93,8 @@ class TrackingNumbersConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input.setdefault(CONF_USE_SSL, DEFAULT_USE_SSL)
                 user_input.setdefault(CONF_EMAIL_FOLDER, DEFAULT_FOLDER)
                 user_input.setdefault(CONF_DAYS_OLD, DEFAULT_DAYS_OLD)
+                user_input.setdefault(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+                user_input.setdefault(CONF_MAX_PACKAGES, DEFAULT_MAX_PACKAGES)
 
                 info = await validate_imap_connection(self.hass, user_input)
             except CannotConnect:
@@ -122,6 +124,15 @@ class TrackingNumbersConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Optional(
                     CONF_DAYS_OLD, default=DEFAULT_DAYS_OLD
                 ): vol.All(cv.positive_int, vol.Range(min=1)),
+                vol.Optional(
+                    CONF_EMAIL_FOLDER, default=DEFAULT_FOLDER
+                ): cv.string,
+                vol.Optional(
+                    CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
+                ): vol.All(cv.positive_int, vol.Range(min=5, max=1440)),
+                vol.Optional(
+                    CONF_MAX_PACKAGES, default=DEFAULT_MAX_PACKAGES
+                ): vol.All(cv.positive_int, vol.Range(min=10, max=500)),
             }
         )
 

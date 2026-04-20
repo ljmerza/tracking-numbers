@@ -10,7 +10,10 @@
           "imap_server": "IMAP Server",
           "imap_port": "IMAP Port",
           "use_ssl": "Use SSL",
-          "days_old": "Days to scan (default 30)"
+          "days_old": "Days to scan (default 30)",
+          "folder": "Email folder to monitor",
+          "scan_interval": "Scan interval (minutes)",
+          "max_packages": "Maximum packages to store"
         }
       }
     },
