@@ -56,7 +56,7 @@ The sensor provides a **flat packages array** optimized for custom cards:
       "carrier": "UPS",
       "carrier_code": "ups",
       "retailer": "Amazon",
-      "retailer_code": "amazon",
+      "retailer_code": "amazon_com",
       "link": "https://www.ups.com/track?tracknum=1Z999AA10123456784",
       "first_seen": "2025-10-25T10:30:00Z",
       "last_updated": "2025-10-28T14:22:00Z"
@@ -69,6 +69,8 @@ The sensor provides a **flat packages array** optimized for custom cards:
   "last_update": "2025-10-28T14:22:00Z"
 }
 ```
+
+**Note on `retailer`:** the retailer is derived from which parser matched the shipment email, i.e. who sent the notification. When the retailer emails you directly (e.g. Amazon's shipment notification), `retailer` is the retailer. When only the carrier emails you (e.g. a bare USPS Informed Delivery alert with no retailer context), `retailer` will be the carrier name — there's no way to recover the original store from the carrier's email alone. Use `retailer_code` for stable filtering (e.g. `amazon_com`, `usps_com`); use `retailer` for display.
 
 ### Custom Card Example
 
