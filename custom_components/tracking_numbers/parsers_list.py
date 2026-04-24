@@ -9,6 +9,7 @@ from .const import (
     EMAIL_ATTR_BODY,
     TRACKING_NUMBER_URLS,
     CARRIER_LINK_HINTS,
+    RETAILER_DISPLAY_NAMES,
     usps_regex,
     fedex_regex,
     ups_regex,
@@ -136,6 +137,20 @@ EMAIL_DOMAIN_CARRIER_MAP = {
     EMAIL_DOMAIN_DHL: 'DHL',
     EMAIL_DOMAIN_SWISS_POST: 'Swiss Post',
 }
+
+
+def retailer_display_name(attr: str) -> str:
+    """Human-readable retailer name derived from a parser ATTR slug.
+
+    `attr` is the first element of a parsers entry (e.g. 'amazon', 'amazon_de',
+    'bh_photo'). Unknown slugs fall back to a simple title-case transform.
+    """
+    if not attr:
+        return 'Unknown'
+    key = str(attr).lower()
+    if key in RETAILER_DISPLAY_NAMES:
+        return RETAILER_DISPLAY_NAMES[key]
+    return key.replace('_', ' ').replace('-', ' ').title()
 
 
 def _carrier_from_link(link: str | None) -> str | None:

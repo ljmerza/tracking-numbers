@@ -34,6 +34,7 @@ from .const import (
     EMAIL_ATTR_DATE,
     TRACKING_NUMBER_URLS,
     MANUAL_RETAILER_CODE,
+    MANUAL_RETAILER_NAME,
     MANUAL_ORIGIN_FALLBACK,
     MANUAL_CARRIER_FALLBACK,
     STORE_KEY_MANUAL_PACKAGES,
@@ -41,8 +42,8 @@ from .const import (
     LEGACY_STORE_KEY_IGNORED,
 )
 
-# Import parsers and find_carrier from shared module
-from .parsers_list import parsers, find_carrier
+# Import parsers and helpers from shared module
+from .parsers_list import parsers, find_carrier, retailer_display_name
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -245,6 +246,8 @@ class TrackingNumbersCoordinator(DataUpdateCoordinator):
             if not tracking_numbers:
                 continue
 
+            retailer_name = retailer_display_name(ATTR)
+
             # Normalize to list of dicts
             if tracking_numbers and isinstance(tracking_numbers[0], (str, int)):
                 tracking_numbers = [{'tracking_number': str(x)} for x in tracking_numbers]
@@ -292,7 +295,8 @@ class TrackingNumbersCoordinator(DataUpdateCoordinator):
                         pkg_info['first_seen'] = now
                     pkg_info['last_updated'] = now
 
-                # Add retailer_code and carrier_code for easy filtering
+                # Add retailer/retailer_code and carrier_code for easy filtering
+                pkg_info['retailer'] = retailer_name
                 pkg_info['retailer_code'] = EMAIL_DOMAIN.replace('@', '').replace('.', '_')
                 pkg_info['carrier_code'] = pkg_info['carrier'].lower().replace(' ', '_')
 
@@ -338,6 +342,8 @@ class TrackingNumbersCoordinator(DataUpdateCoordinator):
         for tracking_number, manual_pkg in manual_packages.items():
             if not tracking_number or tracking_number in hidden_numbers:
                 continue
+            if 'retailer' not in manual_pkg:
+                manual_pkg['retailer'] = manual_pkg.get('origin') or MANUAL_RETAILER_NAME
             merged[tracking_number] = manual_pkg
 
         packages = list(merged.values())
@@ -481,6 +487,7 @@ class TrackingNumbersCoordinator(DataUpdateCoordinator):
             'link': final_link,
             'first_seen': existing.get('first_seen', now),
             'last_updated': now,
+            'retailer': final_origin or MANUAL_RETAILER_NAME,
             'retailer_code': MANUAL_RETAILER_CODE,
             'carrier_code': final_carrier.lower().replace(' ', '_') or 'unknown',
             'source': 'manual',
@@ -564,7 +571,7 @@ class TrackingNumbersCoordinator(DataUpdateCoordinator):
 
         for pkg in packages:
             carrier = pkg.get('carrier', 'Unknown')
-            retailer = pkg.get('origin', 'Unknown')
+            retailer = pkg.get('retailer') or pkg.get('origin') or 'Unknown'
 
             by_carrier[carrier] = by_carrier.get(carrier, 0) + 1
             by_retailer[retailer] = by_retailer.get(retailer, 0) + 1
