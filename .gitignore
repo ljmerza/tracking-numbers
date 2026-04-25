@@ -1,4 +1,5 @@
 __pycache__/
 .devcontainer/secrets.yaml
 email.log
+.claude/
 custom_components/tracking_numbers/.claude/
