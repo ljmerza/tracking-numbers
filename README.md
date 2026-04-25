@@ -30,6 +30,7 @@ Supported Emails
 - Loog Guitars
 - Lowes
 - Manta Sleep
+- Mixbook
 - Moen
 - Monoprice
 - NewEgg
