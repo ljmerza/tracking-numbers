@@ -70,6 +70,7 @@ from .parsers.wayfair import ATTR_WAYFAIR, EMAIL_DOMAIN_WAYFAIR, parse_wayfair
 from .parsers.switchbot import ATTR_SWITCHBOT, EMAIL_DOMAIN_SWITCHBOT, parse_switchbot
 from .parsers.mixbook import ATTR_MIXBOOK, EMAIL_DOMAIN_MIXBOOK, parse_mixbook
 from .parsers.costway import ATTR_COSTWAY, EMAIL_DOMAIN_COSTWAY, parse_costway
+from .parsers.walmart import ATTR_WALMART, EMAIL_DOMAIN_WALMART, parse_walmart
 from .parsers.generic import ATTR_GENERIC, EMAIL_DOMAIN_GENERIC, parse_generic
 
 _LOGGER = logging.getLogger(__name__)
@@ -130,6 +131,7 @@ parsers = [
     (ATTR_SWITCHBOT, EMAIL_DOMAIN_SWITCHBOT, parse_switchbot),
     (ATTR_MIXBOOK, EMAIL_DOMAIN_MIXBOOK, parse_mixbook),
     (ATTR_COSTWAY, EMAIL_DOMAIN_COSTWAY, parse_costway),
+    (ATTR_WALMART, EMAIL_DOMAIN_WALMART, parse_walmart),
     (ATTR_GENERIC, EMAIL_DOMAIN_GENERIC, parse_generic),
 ]
 
