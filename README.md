@@ -13,6 +13,7 @@ Supported Emails
 - Bespoke Post
 - Best Buy
 - Chewy
+- Costway
 - DHL
 - Dollar Shave Club
 - DSW
