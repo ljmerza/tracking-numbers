@@ -22,6 +22,7 @@ Supported Emails
 - FedEx
 - Gamestop
 - Georgia Power
+- Giri Designs
 - Google Express
 - Groupon
 - Guitar Center
