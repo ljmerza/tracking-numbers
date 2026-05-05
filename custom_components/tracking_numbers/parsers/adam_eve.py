@@ -17,13 +17,17 @@ def parse_adam_and_eve(email):
     _LOGGER.debug(f"[Adam Eve] Starting parser")
 
     soup = BeautifulSoup(email[EMAIL_ATTR_BODY], 'html.parser')
-    linkTexts = [link.text for link in soup.find_all('a')]
-    for linkText in linkTexts:
-        if not linkText:
-            continue
-        match = re.search('(\d{26})', linkText)
-        if match and match.group(1).isnumeric() and match.group(1) not in tracking_numbers:
-            tracking_numbers.append(match.group(1))
+    for link in soup.find_all('a'):
+        linkText = link.text
+        if linkText:
+            match = re.search(r'(\d{26})', linkText)
+            if match and match.group(1) not in tracking_numbers:
+                tracking_numbers.append(match.group(1))
+
+        href = link.get('href') or ''
+        href_match = re.search(r'trackingnumber=(\d{26})', href)
+        if href_match and href_match.group(1) not in tracking_numbers:
+            tracking_numbers.append(href_match.group(1))
 
     _LOGGER.debug(f"[Adam Eve] Parser complete - Found {len(tracking_numbers)} tracking number(s)")
     return tracking_numbers
