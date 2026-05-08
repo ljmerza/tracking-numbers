@@ -40,6 +40,7 @@ from .const import (
     STORE_KEY_MANUAL_PACKAGES,
     STORE_KEY_HIDDEN_TRACKING_NUMBERS,
     LEGACY_STORE_KEY_IGNORED,
+    IMAP_CONNECTION_TIMEOUT,
 )
 
 # Import parsers and helpers from shared module
@@ -138,7 +139,7 @@ class TrackingNumbersCoordinator(DataUpdateCoordinator):
         _LOGGER.info("Email: %s, Folder: %s, Days: %s", email, folder, days_old)
 
         # Connect to IMAP server
-        server = IMAPClient(imap_server, port=imap_port, use_uid=True, ssl=use_ssl, timeout=10)
+        server = IMAPClient(imap_server, port=imap_port, use_uid=True, ssl=use_ssl, timeout=IMAP_CONNECTION_TIMEOUT)
 
         try:
             _LOGGER.debug("Attempting IMAP login...")

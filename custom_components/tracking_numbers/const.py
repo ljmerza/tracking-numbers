@@ -28,6 +28,9 @@ DEFAULT_DAYS_OLD = 30
 DEFAULT_SCAN_INTERVAL = 30  # minutes
 DEFAULT_MAX_PACKAGES = 100
 
+# Seconds to wait for an IMAP server to respond on connect/login probes.
+IMAP_CONNECTION_TIMEOUT = 10
+
 ATTR_COUNT = 'count'
 ATTR_TRACKING_NUMBERS = 'tracking_numbers'
 
