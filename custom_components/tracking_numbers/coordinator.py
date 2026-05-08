@@ -138,7 +138,7 @@ class TrackingNumbersCoordinator(DataUpdateCoordinator):
         _LOGGER.info("Email: %s, Folder: %s, Days: %s", email, folder, days_old)
 
         # Connect to IMAP server
-        server = IMAPClient(imap_server, port=imap_port, use_uid=True, ssl=use_ssl)
+        server = IMAPClient(imap_server, port=imap_port, use_uid=True, ssl=use_ssl, timeout=10)
 
         try:
             _LOGGER.debug("Attempting IMAP login...")

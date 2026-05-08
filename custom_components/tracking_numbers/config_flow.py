@@ -6,7 +6,7 @@ from typing import Any
 
 import voluptuous as vol
 from imapclient import IMAPClient
-from imapclient.exceptions import IMAPClientError
+from imapclient.exceptions import IMAPClientError, LoginError
 
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant, callback
@@ -56,13 +56,16 @@ async def validate_imap_connection(
             server.select_folder(data.get(CONF_EMAIL_FOLDER, DEFAULT_FOLDER), readonly=True)
             server.logout()
             return True
+        except LoginError as err:
+            _LOGGER.exception("IMAP authentication failed (%s)", type(err).__name__)
+            raise InvalidAuth from err
         except IMAPClientError as err:
-            _LOGGER.error("IMAP connection error: %s", err)
-            if "authentication" in str(err).lower() or "login" in str(err).lower():
-                raise InvalidAuth from err
+            _LOGGER.exception("IMAP connection error (%s)", type(err).__name__)
             raise CannotConnect from err
         except Exception as err:
-            _LOGGER.error("Unexpected error during IMAP connection: %s", err)
+            _LOGGER.exception(
+                "Unexpected error during IMAP connection (%s)", type(err).__name__
+            )
             raise CannotConnect from err
 
     await hass.async_add_executor_job(_test_connection)
