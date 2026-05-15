@@ -14,6 +14,7 @@ Supported Emails
 - Best Buy
 - Chewy
 - Costway
+- Cradlewise
 - DHL
 - Dollar Shave Club
 - DSW
