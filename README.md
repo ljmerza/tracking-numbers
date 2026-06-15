@@ -29,6 +29,7 @@ Supported Emails
 - Guitar Center
 - Home Depot
 - House of Noa
+- Inovelli
 - Litter Robot
 - Loog Guitars
 - Lowes

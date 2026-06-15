@@ -73,6 +73,7 @@ from .parsers.costway import ATTR_COSTWAY, EMAIL_DOMAIN_COSTWAY, parse_costway
 from .parsers.walmart import ATTR_WALMART, EMAIL_DOMAIN_WALMART, parse_walmart
 from .parsers.giri_designs import ATTR_GIRI_DESIGNS, EMAIL_DOMAIN_GIRI_DESIGNS, parse_giri_designs
 from .parsers.cradlewise import ATTR_CRADLEWISE, EMAIL_DOMAIN_CRADLEWISE, parse_cradlewise
+from .parsers.inovelli import ATTR_INOVELLI, EMAIL_DOMAIN_INOVELLI, parse_inovelli
 from .parsers.generic import ATTR_GENERIC, EMAIL_DOMAIN_GENERIC, parse_generic
 
 _LOGGER = logging.getLogger(__name__)
@@ -136,6 +137,7 @@ parsers = [
     (ATTR_WALMART, EMAIL_DOMAIN_WALMART, parse_walmart),
     (ATTR_GIRI_DESIGNS, EMAIL_DOMAIN_GIRI_DESIGNS, parse_giri_designs),
     (ATTR_CRADLEWISE, EMAIL_DOMAIN_CRADLEWISE, parse_cradlewise),
+    (ATTR_INOVELLI, EMAIL_DOMAIN_INOVELLI, parse_inovelli),
     (ATTR_GENERIC, EMAIL_DOMAIN_GENERIC, parse_generic),
 ]
 
