@@ -37,29 +37,45 @@ Gmail requires an **app-specific password**:
 
 ## Configuration Options
 
-After setup, click **Configure** to modify:
+After setup, click **Configure**. The options menu has three sections:
 
-- **Days to scan** (1-90): How far back to check emails
-- **Email folder**: Which folder to monitor (default: INBOX)
-- **Scan interval** (5-1440 minutes): How often to check for new packages
-- **Max packages** (10-500): Maximum packages to store
-- **TrackingMore API key** (optional): Enables live delivery status (see below). Leave blank to disable.
+- **Scan settings** — Days to scan (1–90), Email folder (default INBOX), Scan interval (5–1440 min), Max packages (10–500).
+- **Live status provider** — choose `None` (default), `TrackingMore`, or `Carrier-direct`; plus the TrackingMore API key.
+- **Carrier API credentials** — free per-carrier credentials (used when the provider is Carrier-direct).
 
-## Live Delivery Status (TrackingMore)
+## Live Delivery Status (optional)
 
-By default the integration only *extracts* tracking numbers from email. If you provide a
-[TrackingMore](https://www.trackingmore.com/) API key (during setup or later via **Configure**), it
-also fetches **live delivery status** for packages shipped by recognized carriers.
+By default the integration only *extracts* tracking numbers from email. Optionally it can fetch **live
+delivery status** for packages shipped by recognized carriers, via one of two providers selected under
+**Configure → Live status provider**.
 
 - **Scope:** only packages resolved to a real carrier (USPS, UPS, FedEx, DHL) are looked up. Retailer
   order numbers (Amazon, Chewy, etc.) are skipped — they aren't carrier-trackable.
-- **Credits:** TrackingMore deducts **one credit per unique tracking number + courier registered**. Each
-  number is registered only **once** (cached in storage); subsequent refreshes re-read status for free.
-  New registrations are capped per refresh cycle so a burst of packages can't drain a small credit budget.
-- **Fields added** to each enriched package: `status` (readable label, e.g. "In Transit"),
-  `delivery_status` (enum: `pending`, `inforeceived`, `transit`, `pickup`, `delivered`, `undelivered`,
-  `exception`, `expired`, `notfound`), `estimated_delivery` (date), and `status_updated` (ISO timestamp).
-- **Disabled by default:** with no key configured, behavior is unchanged (email extraction only).
+- **Fields added** to each enriched package: `status` (readable label, e.g. "In Transit", "Out for
+  Delivery"), `delivery_status` (enum: `pending`, `transit`, `delivered`, `exception`, `notfound`, plus
+  TrackingMore's finer values), `estimated_delivery` (date), and `status_updated` (ISO timestamp).
+- **Disabled by default:** with the provider set to `None`, behavior is unchanged (email extraction only).
+
+### Provider: Carrier-direct (free)
+
+Query each carrier's own free developer API — **zero cost**. Set the provider to *Carrier-direct* and enter
+credentials under **Configure → Carrier API credentials** for the carriers you use (leave others blank):
+
+| Carrier | Credentials | Get them at |
+|---|---|---|
+| USPS | OAuth consumer key + secret (add the *Tracking* API to your app) | https://developers.usps.com/ |
+| UPS | OAuth client ID + secret | https://developer.ups.com/ |
+| FedEx | API key + secret key (Track API) | https://developer.fedex.com/ |
+| DHL | one API key (Shipment Tracking – Unified) | https://developer.dhl.com/ |
+
+Already-delivered packages aren't re-queried, and calls are spaced/capped per carrier to respect the free
+tiers (e.g. USPS ~60/hr, DHL 250/day, ~1 call/5s).
+
+### Provider: TrackingMore (paid credits)
+
+Supply a [TrackingMore](https://www.trackingmore.com/) API key. TrackingMore deducts **one credit per
+unique tracking number + courier registered**; each number is registered only **once** (cached), then
+re-read for free, with new registrations capped per cycle.
 
 ## Data Structure
 
