@@ -13,6 +13,14 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
 from .const import (
     DOMAIN,
@@ -26,6 +34,18 @@ from .const import (
     CONF_SCAN_INTERVAL,
     CONF_MAX_PACKAGES,
     CONF_TRACKINGMORE_API_KEY,
+    CONF_STATUS_PROVIDER,
+    STATUS_PROVIDER_NONE,
+    STATUS_PROVIDER_TRACKINGMORE,
+    STATUS_PROVIDER_CARRIERS,
+    DEFAULT_STATUS_PROVIDER,
+    CONF_USPS_CLIENT_ID,
+    CONF_USPS_CLIENT_SECRET,
+    CONF_UPS_CLIENT_ID,
+    CONF_UPS_CLIENT_SECRET,
+    CONF_FEDEX_CLIENT_ID,
+    CONF_FEDEX_CLIENT_SECRET,
+    CONF_DHL_API_KEY,
     DEFAULT_IMAP_SERVER,
     DEFAULT_IMAP_PORT,
     DEFAULT_USE_SSL,
@@ -161,45 +181,141 @@ class TrackingNumbersConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return TrackingNumbersOptionsFlowHandler()
 
 
+def _password_selector() -> TextSelector:
+    """A masked text input for secrets/API keys."""
+    return TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD))
+
+
 class TrackingNumbersOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle options flow for Tracking Numbers."""
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Manage the options."""
+        """Show the options menu."""
+        return self.async_show_menu(
+            step_id="init",
+            menu_options=[
+                "email_settings",
+                "status_provider",
+                "carrier_credentials",
+            ],
+        )
+
+    def _current(self) -> dict[str, Any]:
+        """Merged current values (data + options) for defaults."""
+        return {**self.config_entry.data, **self.config_entry.options}
+
+    def _save(self, updates: dict[str, Any]) -> FlowResult:
+        """Merge a sub-step's values into the full options and finish."""
+        return self.async_create_entry(
+            title="", data={**self.config_entry.options, **updates}
+        )
+
+    async def async_step_email_settings(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Scan/window settings."""
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            return self._save(user_input)
 
-        # Get current options or defaults
-        options = {**self.config_entry.data, **self.config_entry.options}
-
+        current = self._current()
         data_schema = vol.Schema(
             {
                 vol.Optional(
                     CONF_DAYS_OLD,
-                    default=options.get(CONF_DAYS_OLD, DEFAULT_DAYS_OLD),
+                    default=current.get(CONF_DAYS_OLD, DEFAULT_DAYS_OLD),
                 ): vol.All(cv.positive_int, vol.Range(min=1)),
                 vol.Optional(
                     CONF_EMAIL_FOLDER,
-                    default=options.get(CONF_EMAIL_FOLDER, DEFAULT_FOLDER),
+                    default=current.get(CONF_EMAIL_FOLDER, DEFAULT_FOLDER),
                 ): cv.string,
                 vol.Optional(
                     CONF_SCAN_INTERVAL,
-                    default=options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
+                    default=current.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
                 ): vol.All(cv.positive_int, vol.Range(min=5, max=1440)),
                 vol.Optional(
                     CONF_MAX_PACKAGES,
-                    default=options.get(CONF_MAX_PACKAGES, DEFAULT_MAX_PACKAGES),
+                    default=current.get(CONF_MAX_PACKAGES, DEFAULT_MAX_PACKAGES),
                 ): vol.All(cv.positive_int, vol.Range(min=10, max=500)),
-                vol.Optional(
-                    CONF_TRACKINGMORE_API_KEY,
-                    default=options.get(CONF_TRACKINGMORE_API_KEY, ""),
-                ): cv.string,
             }
         )
+        return self.async_show_form(step_id="email_settings", data_schema=data_schema)
 
-        return self.async_show_form(step_id="init", data_schema=data_schema)
+    async def async_step_status_provider(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Choose the live-status provider (and the TrackingMore key)."""
+        if user_input is not None:
+            return self._save(user_input)
+
+        current = self._current()
+        data_schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_STATUS_PROVIDER,
+                    default=current.get(CONF_STATUS_PROVIDER, DEFAULT_STATUS_PROVIDER),
+                ): SelectSelector(
+                    SelectSelectorConfig(
+                        mode=SelectSelectorMode.DROPDOWN,
+                        options=[
+                            {"value": STATUS_PROVIDER_NONE, "label": "None (email only)"},
+                            {"value": STATUS_PROVIDER_TRACKINGMORE, "label": "TrackingMore (API key)"},
+                            {"value": STATUS_PROVIDER_CARRIERS, "label": "Carrier-direct (USPS/UPS/FedEx/DHL)"},
+                        ],
+                    )
+                ),
+                vol.Optional(
+                    CONF_TRACKINGMORE_API_KEY,
+                    default=current.get(CONF_TRACKINGMORE_API_KEY, ""),
+                ): _password_selector(),
+            }
+        )
+        return self.async_show_form(step_id="status_provider", data_schema=data_schema)
+
+    async def async_step_carrier_credentials(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Enter free carrier API credentials (all optional)."""
+        if user_input is not None:
+            return self._save(user_input)
+
+        current = self._current()
+        data_schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_USPS_CLIENT_ID,
+                    default=current.get(CONF_USPS_CLIENT_ID, ""),
+                ): cv.string,
+                vol.Optional(
+                    CONF_USPS_CLIENT_SECRET,
+                    default=current.get(CONF_USPS_CLIENT_SECRET, ""),
+                ): _password_selector(),
+                vol.Optional(
+                    CONF_UPS_CLIENT_ID,
+                    default=current.get(CONF_UPS_CLIENT_ID, ""),
+                ): cv.string,
+                vol.Optional(
+                    CONF_UPS_CLIENT_SECRET,
+                    default=current.get(CONF_UPS_CLIENT_SECRET, ""),
+                ): _password_selector(),
+                vol.Optional(
+                    CONF_FEDEX_CLIENT_ID,
+                    default=current.get(CONF_FEDEX_CLIENT_ID, ""),
+                ): cv.string,
+                vol.Optional(
+                    CONF_FEDEX_CLIENT_SECRET,
+                    default=current.get(CONF_FEDEX_CLIENT_SECRET, ""),
+                ): _password_selector(),
+                vol.Optional(
+                    CONF_DHL_API_KEY,
+                    default=current.get(CONF_DHL_API_KEY, ""),
+                ): _password_selector(),
+            }
+        )
+        return self.async_show_form(
+            step_id="carrier_credentials", data_schema=data_schema
+        )
 
 
 class CannotConnect(HomeAssistantError):

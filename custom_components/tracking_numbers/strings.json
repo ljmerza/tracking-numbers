@@ -32,13 +32,40 @@
     "step": {
       "init": {
         "title": "Tracking Numbers Options",
-        "description": "Configure tracking number scanner settings",
+        "menu_options": {
+          "email_settings": "Scan settings",
+          "status_provider": "Live status provider",
+          "carrier_credentials": "Carrier API credentials"
+        }
+      },
+      "email_settings": {
+        "title": "Scan settings",
         "data": {
           "days_old": "Days to scan (how far back to check emails)",
           "folder": "Email folder to monitor",
           "scan_interval": "Scan interval (minutes)",
-          "max_packages": "Maximum packages to store",
-          "trackingmore_api_key": "TrackingMore API key (leave blank to disable live status)"
+          "max_packages": "Maximum packages to store"
+        }
+      },
+      "status_provider": {
+        "title": "Live status provider",
+        "description": "Choose how delivery status is fetched. Carrier-direct is free (enter credentials below); TrackingMore uses your API key.",
+        "data": {
+          "status_provider": "Status provider",
+          "trackingmore_api_key": "TrackingMore API key (only for the TrackingMore provider)"
+        }
+      },
+      "carrier_credentials": {
+        "title": "Carrier API credentials",
+        "description": "Free developer credentials per carrier. Leave a carrier blank to skip it. Used only when the status provider is Carrier-direct.",
+        "data": {
+          "usps_client_id": "USPS consumer key",
+          "usps_client_secret": "USPS consumer secret",
+          "ups_client_id": "UPS client ID",
+          "ups_client_secret": "UPS client secret",
+          "fedex_client_id": "FedEx API key",
+          "fedex_client_secret": "FedEx secret key",
+          "dhl_api_key": "DHL API key"
         }
       }
     }

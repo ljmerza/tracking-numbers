@@ -21,6 +21,24 @@ CONF_MAX_PACKAGES = 'max_packages'
 # Optional TrackingMore API key; when empty, live status lookups are disabled.
 CONF_TRACKINGMORE_API_KEY = 'trackingmore_api_key'
 
+# Live-status provider selection. 'none' disables status enrichment.
+CONF_STATUS_PROVIDER = 'status_provider'
+STATUS_PROVIDER_NONE = 'none'
+STATUS_PROVIDER_TRACKINGMORE = 'trackingmore'
+STATUS_PROVIDER_CARRIERS = 'carriers'
+DEFAULT_STATUS_PROVIDER = STATUS_PROVIDER_NONE
+
+# Carrier-direct (free) API credentials. USPS/UPS/FedEx use OAuth2 client
+# credentials (id + secret); DHL uses a single API key. Each is optional — a
+# carrier with no credentials configured is simply skipped.
+CONF_USPS_CLIENT_ID = 'usps_client_id'
+CONF_USPS_CLIENT_SECRET = 'usps_client_secret'
+CONF_UPS_CLIENT_ID = 'ups_client_id'
+CONF_UPS_CLIENT_SECRET = 'ups_client_secret'
+CONF_FEDEX_CLIENT_ID = 'fedex_client_id'
+CONF_FEDEX_CLIENT_SECRET = 'fedex_client_secret'
+CONF_DHL_API_KEY = 'dhl_api_key'
+
 # Defaults
 DEFAULT_IMAP_SERVER = 'imap.gmail.com'
 DEFAULT_IMAP_PORT = 993
@@ -143,6 +161,94 @@ TRACKINGMORE_STATUS_LABELS = {
     'undelivered': 'Undelivered',
     'exception': 'Exception',
     'expired': 'Expired',
+}
+
+# --- Carrier-direct (free) live-status integration (optional) -----------------
+# Persists {tracking_number: {delivery_status, status, ...}} of last-known status
+# so already-delivered packages aren't re-queried (respects tight carrier rate
+# limits) and status survives restarts.
+STORE_KEY_CARRIER_STATUS = 'carrier_status'
+
+# Seconds to wait for a carrier API response.
+CARRIER_TIMEOUT = 15
+# Cap total carrier lookups per poll cycle (protects the tightest free tiers:
+# USPS ~60/hr, DHL 250/day). Remaining packages are looked up on later cycles.
+CARRIER_MAX_LOOKUPS_PER_CYCLE = 20
+# Minimum seconds between successive calls to the SAME carrier (DHL enforces
+# ~1 call / 5 s on its free tier; the others are far more generous).
+CARRIER_MIN_CALL_SPACING = {
+    'usps': 1.0,
+    'ups': 0.5,
+    'fedex': 0.2,
+    'dhl': 5.0,
+}
+
+# Production hosts / endpoints (see plan for sources). Token lifetimes are read
+# from each response rather than hardcoded.
+USPS_TOKEN_URL = 'https://apis.usps.com/oauth2/v3/token'
+USPS_TRACK_URL = 'https://apis.usps.com/tracking/v3/tracking/{number}'
+UPS_TOKEN_URL = 'https://onlinetools.ups.com/security/v1/oauth/token'
+UPS_TRACK_URL = 'https://onlinetools.ups.com/api/track/v1/details/{number}'
+FEDEX_TOKEN_URL = 'https://apis.fedex.com/oauth/token'
+FEDEX_TRACK_URL = 'https://apis.fedex.com/track/v1/trackingnumbers'
+DHL_TRACK_URL = 'https://api-eu.dhl.com/track/shipments'
+
+# Normalized delivery_status enum written to packages, aligned with the card's
+# getStatusMeta(): delivered / transit / pending / exception / notfound. There is
+# no distinct "out for delivery" enum — OFD maps to `transit` (blue chip) while
+# the human `status` label still reads "Out for Delivery".
+CARRIER_STATUS_LABELS = {
+    'pending': 'Pending',
+    'transit': 'In Transit',
+    'out_for_delivery': 'Out for Delivery',
+    'delivered': 'Delivered',
+    'exception': 'Exception',
+    'notfound': 'Not Found',
+}
+# "out_for_delivery" is a label-only refinement; its chip color reuses `transit`.
+CARRIER_STATUS_CHIP = {'out_for_delivery': 'transit'}
+
+# DHL statusCode (stable 5-value enum) -> normalized status.
+DHL_STATUS_MAP = {
+    'pre-transit': 'pending',
+    'transit': 'transit',
+    'delivered': 'delivered',
+    'failure': 'exception',
+    'unknown': 'notfound',
+}
+# USPS statusCategory -> normalized status.
+USPS_STATUS_MAP = {
+    'pre-shipment': 'pending',
+    'accepted': 'transit',
+    'in transit': 'transit',
+    'out for delivery': 'out_for_delivery',
+    'delivered': 'delivered',
+    'alert': 'exception',
+    'delivery attempt': 'exception',
+    'available for pickup': 'out_for_delivery',
+}
+# UPS currentStatus.type (single letter) -> normalized status. Within 'D', the
+# description disambiguates delivered vs out-for-delivery (handled in code).
+UPS_STATUS_MAP = {
+    'M': 'pending',
+    'I': 'transit',
+    'U': 'transit',
+    'D': 'delivered',
+    'X': 'exception',
+}
+# FedEx latestStatusDetail.derivedCode (2-letter) -> normalized status. Unlisted
+# codes default to 'transit' (see carriers.py).
+FEDEX_STATUS_MAP = {
+    'OC': 'pending',
+    'DL': 'delivered',
+    'OD': 'out_for_delivery',
+    'AD': 'out_for_delivery',
+    'DE': 'exception',
+    'SE': 'exception',
+    'DY': 'exception',
+    'EA': 'exception',
+    'CA': 'exception',
+    'RS': 'exception',
 }
 
    

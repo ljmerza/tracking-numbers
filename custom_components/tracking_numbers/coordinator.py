@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta, date, datetime, timezone
 import logging
+import time
 from typing import Any
 from email.utils import parsedate_to_datetime
 
@@ -27,6 +28,10 @@ from .const import (
     CONF_SCAN_INTERVAL,
     CONF_MAX_PACKAGES,
     CONF_TRACKINGMORE_API_KEY,
+    CONF_STATUS_PROVIDER,
+    STATUS_PROVIDER_TRACKINGMORE,
+    STATUS_PROVIDER_CARRIERS,
+    STATUS_PROVIDER_NONE,
     DEFAULT_FOLDER,
     DEFAULT_DAYS_OLD,
     DEFAULT_SCAN_INTERVAL,
@@ -43,16 +48,20 @@ from .const import (
     STORE_KEY_MANUAL_PACKAGES,
     STORE_KEY_HIDDEN_TRACKING_NUMBERS,
     STORE_KEY_TRACKINGMORE,
+    STORE_KEY_CARRIER_STATUS,
     LEGACY_STORE_KEY_IGNORED,
     IMAP_CONNECTION_TIMEOUT,
     TRACKINGMORE_COURIER_MAP,
     TRACKINGMORE_CREATE_DELAY,
     TRACKINGMORE_MAX_NEW_PER_CYCLE,
+    CARRIER_MAX_LOOKUPS_PER_CYCLE,
+    CARRIER_MIN_CALL_SPACING,
 )
 
 # Import parsers and helpers from shared module
 from .parsers_list import parsers, find_carrier, retailer_display_name
 from .trackingmore import TrackingMoreClient
+from .carriers import build_carrier_clients
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,6 +84,11 @@ class TrackingNumbersCoordinator(DataUpdateCoordinator):
         # Storage for package persistence
         self.store = Store(hass, version=1, key=f"{DOMAIN}_{entry_id}")
         self.stored_data = {}
+
+        # Carrier-direct clients, built lazily and cached so their OAuth tokens
+        # persist across poll cycles. Credentials are fixed per config entry (an
+        # options change reloads the entry, recreating the coordinator).
+        self._carrier_clients: dict[str, Any] | None = None
 
         # Get scan interval from options
         scan_interval_minutes = options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
@@ -106,8 +120,8 @@ class TrackingNumbersCoordinator(DataUpdateCoordinator):
 
             packages = self._merge_manual_packages(auto_packages)
 
-            # Optionally enrich with live delivery status from TrackingMore.
-            packages = await self._enrich_with_trackingmore(packages)
+            # Optionally enrich with live delivery status (TrackingMore or carriers).
+            packages = await self._enrich_status(packages)
 
             # Build summary statistics
             summary = self._build_summary(packages)
@@ -380,6 +394,116 @@ class TrackingNumbersCoordinator(DataUpdateCoordinator):
                 self.stored_data[STORE_KEY_HIDDEN_TRACKING_NUMBERS] = []
         if not isinstance(self.stored_data.get(STORE_KEY_TRACKINGMORE), dict):
             self.stored_data[STORE_KEY_TRACKINGMORE] = {}
+        if not isinstance(self.stored_data.get(STORE_KEY_CARRIER_STATUS), dict):
+            self.stored_data[STORE_KEY_CARRIER_STATUS] = {}
+
+    def _status_provider(self) -> str:
+        """Resolve the configured status provider (with v4.9.0 back-compat)."""
+        provider = self.options.get(
+            CONF_STATUS_PROVIDER, self.config.get(CONF_STATUS_PROVIDER)
+        )
+        if provider:
+            return provider
+        # Back-compat: entries created on v4.9.0 have no provider set but may
+        # already have a TrackingMore key — keep enriching via TrackingMore.
+        api_key = self.options.get(
+            CONF_TRACKINGMORE_API_KEY, self.config.get(CONF_TRACKINGMORE_API_KEY)
+        )
+        return STATUS_PROVIDER_TRACKINGMORE if api_key else STATUS_PROVIDER_NONE
+
+    async def _enrich_status(
+        self, packages: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
+        """Dispatch status enrichment to the configured provider."""
+        provider = self._status_provider()
+        if provider == STATUS_PROVIDER_CARRIERS:
+            return await self._enrich_with_carriers(packages)
+        if provider == STATUS_PROVIDER_TRACKINGMORE:
+            return await self._enrich_with_trackingmore(packages)
+        return packages
+
+    @staticmethod
+    def _apply_status(
+        pkg: dict[str, Any], status: dict[str, Any], updated: str
+    ) -> None:
+        """Write normalized status fields onto a package dict."""
+        if status.get("status"):
+            pkg["status"] = status["status"]
+        if status.get("delivery_status"):
+            pkg["delivery_status"] = status["delivery_status"]
+        if status.get("estimated_delivery"):
+            pkg["estimated_delivery"] = status["estimated_delivery"]
+        pkg["status_updated"] = updated
+
+    async def _enrich_with_carriers(
+        self, packages: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
+        """Add live delivery status from carrier-direct APIs (free).
+
+        Queries each package's carrier client (USPS/UPS/FedEx/DHL) for status,
+        skipping already-delivered packages and respecting per-carrier rate
+        limits. No-ops when no carrier credentials are configured.
+        """
+        if self._carrier_clients is None:
+            merged = {**self.config, **self.options}
+            self._carrier_clients = build_carrier_clients(
+                async_get_clientsession(self.hass), merged
+            )
+        clients = self._carrier_clients
+        if not clients:
+            return packages
+
+        cache: dict[str, Any] = self.stored_data.setdefault(
+            STORE_KEY_CARRIER_STATUS, {}
+        )
+        now = datetime.now().isoformat()
+        lookups = 0
+        last_call: dict[str, float] = {}
+
+        for pkg in packages:
+            carrier = pkg.get("carrier_code")
+            client = clients.get(carrier)
+            if client is None:
+                continue
+            number = pkg["tracking_number"]
+            cached = cache.get(number)
+
+            # Don't re-query delivered packages; still surface last-known status.
+            if cached and cached.get("delivery_status") == "delivered":
+                self._apply_status(pkg, cached, cached.get("status_updated") or now)
+                continue
+
+            # Out of per-cycle budget: reuse last-known status if we have it.
+            if lookups >= CARRIER_MAX_LOOKUPS_PER_CYCLE:
+                if cached:
+                    self._apply_status(pkg, cached, cached.get("status_updated") or now)
+                continue
+
+            # Respect per-carrier minimum spacing between successive calls.
+            spacing = CARRIER_MIN_CALL_SPACING.get(carrier, 0.0)
+            if spacing and carrier in last_call:
+                wait = spacing - (time.monotonic() - last_call[carrier])
+                if wait > 0:
+                    await asyncio.sleep(wait)
+
+            result = await client.track(number)
+            last_call[carrier] = time.monotonic()
+            lookups += 1
+
+            if result is None:
+                if cached:
+                    self._apply_status(pkg, cached, cached.get("status_updated") or now)
+                continue
+
+            self._apply_status(pkg, result, now)
+            cache[number] = {
+                "delivery_status": result.get("delivery_status"),
+                "status": result.get("status"),
+                "estimated_delivery": result.get("estimated_delivery"),
+                "status_updated": now,
+            }
+
+        return packages
 
     async def _enrich_with_trackingmore(
         self, packages: list[dict[str, Any]]

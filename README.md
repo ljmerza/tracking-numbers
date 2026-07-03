@@ -86,11 +86,25 @@ If you want support for tracking, forward me the email (ljmerza at gmail) and op
 | days_old    | number  | **Optional** | `30` how many days of emails to retrieve                              |
 | trackingmore_api_key | string | **Optional** | Enables live delivery status via [TrackingMore](https://www.trackingmore.com/). Leave blank to disable. |
 
-## Live Delivery Status (TrackingMore)
+## Live Delivery Status (optional)
 
-Optionally supply a [TrackingMore](https://www.trackingmore.com/) API key (in the initial setup or later via **Configure**) to enrich packages with live delivery status. When set, packages shipped by recognized carriers (USPS, UPS, FedEx, DHL) gain `status`, `delivery_status`, `estimated_delivery`, and `status_updated` attributes. Retailer order numbers (Amazon, Chewy, etc.) are skipped.
+By default the integration only *extracts* tracking numbers from email. You can optionally enrich packages
+shipped by recognized carriers (USPS, UPS, FedEx, DHL) with live delivery status — `status`,
+`delivery_status`, `estimated_delivery`, and `status_updated` attributes. Retailer order numbers (Amazon,
+Chewy, etc.) are skipped. Configure it under **Configure → Live status provider**; with the provider set to
+**None** (the default) behavior is unchanged.
 
-TrackingMore charges **one credit per tracking number registered**, so each number is registered only once and then re-read for free on later refreshes. New registrations are capped per refresh cycle to protect small credit budgets. With no key configured, the integration behaves exactly as before (email extraction only).
+Two providers are available:
+
+- **Carrier-direct (free):** query each carrier's own free developer API. Set the provider to
+  *Carrier-direct* and enter credentials under **Configure → Carrier API credentials** for whichever
+  carriers you use (leave the rest blank). Each carrier needs a free developer account:
+  [USPS](https://developers.usps.com/) (OAuth key + secret), [UPS](https://developer.ups.com/) (client ID +
+  secret), [FedEx](https://developer.fedex.com/) (API key + secret), [DHL](https://developer.dhl.com/)
+  (one API key). Zero cost; delivered packages aren't re-queried and calls are rate-limited per carrier.
+- **TrackingMore (paid credits):** supply a [TrackingMore](https://www.trackingmore.com/) API key. One
+  credit per tracking number registered; each number is registered once and re-read for free afterward,
+  with new registrations capped per cycle.
 
 ## Manual Tracking Numbers
 
