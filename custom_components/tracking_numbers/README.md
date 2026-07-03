@@ -52,8 +52,9 @@ delivery status** for packages shipped by recognized carriers, via one of two pr
 - **Scope:** only packages resolved to a real carrier (USPS, UPS, FedEx, DHL) are looked up. Retailer
   order numbers (Amazon, Chewy, etc.) are skipped — they aren't carrier-trackable.
 - **Fields added** to each enriched package: `status` (readable label, e.g. "In Transit", "Out for
-  Delivery"), `delivery_status` (enum: `pending`, `transit`, `delivered`, `exception`, `notfound`, plus
-  TrackingMore's finer values), `estimated_delivery` (date), and `status_updated` (ISO timestamp).
+  Delivery"), `delivery_status` (enum: `pending`, `transit`, `out_for_delivery`, `delivered`,
+  `exception`, `notfound`, plus TrackingMore's finer values), `estimated_delivery` (date), and
+  `status_updated` (ISO timestamp).
 - **Disabled by default:** with the provider set to `None`, behavior is unchanged (email extraction only).
 
 ### Provider: Carrier-direct (free)

@@ -194,9 +194,9 @@ FEDEX_TRACK_URL = 'https://apis.fedex.com/track/v1/trackingnumbers'
 DHL_TRACK_URL = 'https://api-eu.dhl.com/track/shipments'
 
 # Normalized delivery_status enum written to packages, aligned with the card's
-# getStatusMeta(): delivered / transit / pending / exception / notfound. There is
-# no distinct "out for delivery" enum — OFD maps to `transit` (blue chip) while
-# the human `status` label still reads "Out for Delivery".
+# getStatusMeta(): delivered / out_for_delivery / transit / pending / exception /
+# notfound. Cards on an older version that don't know `out_for_delivery` fall back
+# to a neutral chip but still show the "Out for Delivery" label.
 CARRIER_STATUS_LABELS = {
     'pending': 'Pending',
     'transit': 'In Transit',
@@ -205,8 +205,6 @@ CARRIER_STATUS_LABELS = {
     'exception': 'Exception',
     'notfound': 'Not Found',
 }
-# "out_for_delivery" is a label-only refinement; its chip color reuses `transit`.
-CARRIER_STATUS_CHIP = {'out_for_delivery': 'transit'}
 
 # DHL statusCode (stable 5-value enum) -> normalized status.
 DHL_STATUS_MAP = {
