@@ -8,6 +8,7 @@ Modern Home Assistant integration for tracking package deliveries by parsing ema
 - 🔄 **Auto-Discovery** - Automatically detects tracking numbers in emails
 - 📊 **Simple Data Structure** - Flat array for easy custom card development
 - ⏱️ **Timestamp Tracking** - Know when packages were first/last seen
+- 🚚 **Live Delivery Status** (optional) - Real-time status via TrackingMore when an API key is provided
 - 🎛️ **Configurable Options** - Scan interval, days to search, max packages
 - 🔧 **Services** - Ignore/unignore tracking numbers, force refresh
 
@@ -42,6 +43,23 @@ After setup, click **Configure** to modify:
 - **Email folder**: Which folder to monitor (default: INBOX)
 - **Scan interval** (5-1440 minutes): How often to check for new packages
 - **Max packages** (10-500): Maximum packages to store
+- **TrackingMore API key** (optional): Enables live delivery status (see below). Leave blank to disable.
+
+## Live Delivery Status (TrackingMore)
+
+By default the integration only *extracts* tracking numbers from email. If you provide a
+[TrackingMore](https://www.trackingmore.com/) API key (during setup or later via **Configure**), it
+also fetches **live delivery status** for packages shipped by recognized carriers.
+
+- **Scope:** only packages resolved to a real carrier (USPS, UPS, FedEx, DHL) are looked up. Retailer
+  order numbers (Amazon, Chewy, etc.) are skipped — they aren't carrier-trackable.
+- **Credits:** TrackingMore deducts **one credit per unique tracking number + courier registered**. Each
+  number is registered only **once** (cached in storage); subsequent refreshes re-read status for free.
+  New registrations are capped per refresh cycle so a burst of packages can't drain a small credit budget.
+- **Fields added** to each enriched package: `status` (readable label, e.g. "In Transit"),
+  `delivery_status` (enum: `pending`, `inforeceived`, `transit`, `pickup`, `delivered`, `undelivered`,
+  `exception`, `expired`, `notfound`), `estimated_delivery` (date), and `status_updated` (ISO timestamp).
+- **Disabled by default:** with no key configured, behavior is unchanged (email extraction only).
 
 ## Data Structure
 
@@ -59,7 +77,12 @@ The sensor provides a **flat packages array** optimized for custom cards:
       "retailer_code": "amazon_com",
       "link": "https://www.ups.com/track?tracknum=1Z999AA10123456784",
       "first_seen": "2025-10-25T10:30:00Z",
-      "last_updated": "2025-10-28T14:22:00Z"
+      "last_updated": "2025-10-28T14:22:00Z",
+
+      "status": "In Transit",
+      "delivery_status": "transit",
+      "estimated_delivery": "2025-10-30",
+      "status_updated": "2025-10-28T14:22:00Z"
     }
   ],
   "summary": {
@@ -69,6 +92,10 @@ The sensor provides a **flat packages array** optimized for custom cards:
   "last_update": "2025-10-28T14:22:00Z"
 }
 ```
+
+**Note on status fields:** `status`, `delivery_status`, `estimated_delivery`, and `status_updated` are
+only present when a TrackingMore API key is configured (or `status` when set manually). See
+[Live Delivery Status](#live-delivery-status-trackingmore).
 
 **Note on `retailer`:** the retailer is derived from which parser matched the shipment email, i.e. who sent the notification. When the retailer emails you directly (e.g. Amazon's shipment notification), `retailer` is the retailer. When only the carrier emails you (e.g. a bare USPS Informed Delivery alert with no retailer context), `retailer` will be the carrier name — there's no way to recover the original store from the carrier's email alone. Use `retailer_code` for stable filtering (e.g. `amazon_com`, `usps_com`); use `retailer` for display.
 

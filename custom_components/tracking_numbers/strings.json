@@ -13,7 +13,8 @@
           "days_old": "Days to scan (default 30)",
           "folder": "Email folder to monitor",
           "scan_interval": "Scan interval (minutes)",
-          "max_packages": "Maximum packages to store"
+          "max_packages": "Maximum packages to store",
+          "trackingmore_api_key": "TrackingMore API key (optional, for live delivery status)"
         }
       }
     },
@@ -36,7 +37,8 @@
           "days_old": "Days to scan (how far back to check emails)",
           "folder": "Email folder to monitor",
           "scan_interval": "Scan interval (minutes)",
-          "max_packages": "Maximum packages to store"
+          "max_packages": "Maximum packages to store",
+          "trackingmore_api_key": "TrackingMore API key (leave blank to disable live status)"
         }
       }
     }
