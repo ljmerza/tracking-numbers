@@ -84,6 +84,13 @@ If you want support for tracking, forward me the email (ljmerza at gmail) and op
 | folder      | string  | **Optional** | `INBOX` Which folder to pull emails from                              |
 | ssl         | boolean | **Optional** | `true` enable or disable SSL when using IMAP                          |
 | days_old    | number  | **Optional** | `30` how many days of emails to retrieve                              |
+| trackingmore_api_key | string | **Optional** | Enables live delivery status via [TrackingMore](https://www.trackingmore.com/). Leave blank to disable. |
+
+## Live Delivery Status (TrackingMore)
+
+Optionally supply a [TrackingMore](https://www.trackingmore.com/) API key (in the initial setup or later via **Configure**) to enrich packages with live delivery status. When set, packages shipped by recognized carriers (USPS, UPS, FedEx, DHL) gain `status`, `delivery_status`, `estimated_delivery`, and `status_updated` attributes. Retailer order numbers (Amazon, Chewy, etc.) are skipped.
+
+TrackingMore charges **one credit per tracking number registered**, so each number is registered only once and then re-read for free on later refreshes. New registrations are capped per refresh cycle to protect small credit budgets. With no key configured, the integration behaves exactly as before (email extraction only).
 
 ## Manual Tracking Numbers
 
