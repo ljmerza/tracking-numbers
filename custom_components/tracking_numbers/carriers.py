@@ -21,7 +21,6 @@ from typing import Any
 import aiohttp
 
 from .const import (
-    CARRIER_STATUS_CHIP,
     CARRIER_STATUS_LABELS,
     CARRIER_TIMEOUT,
     CONF_DHL_API_KEY,
@@ -52,14 +51,12 @@ TRANSACTION_SRC = "ha-tracking-numbers"
 def _result(delivery_status: str, eta: str | None = None) -> dict[str, Any]:
     """Build the normalized status dict written onto a package.
 
-    `delivery_status` here is the internal enum (may be 'out_for_delivery');
-    CARRIER_STATUS_CHIP folds it to a card-compatible chip value while the human
-    `status` label keeps the finer distinction.
+    `delivery_status` is the normalized enum (delivered / out_for_delivery /
+    transit / pending / exception / notfound); the card colors its chip from it.
     """
-    chip = CARRIER_STATUS_CHIP.get(delivery_status, delivery_status)
     label = CARRIER_STATUS_LABELS.get(delivery_status)
     return {
-        "delivery_status": chip,
+        "delivery_status": delivery_status,
         "status": label or (delivery_status.replace("_", " ").title() if delivery_status else None),
         "estimated_delivery": eta,
     }
