@@ -18,6 +18,8 @@ CONF_USE_SSL = 'use_ssl'  # New name for consistency
 CONF_DAYS_OLD = 'days_old'
 CONF_SCAN_INTERVAL = 'scan_interval'
 CONF_MAX_PACKAGES = 'max_packages'
+# Optional TrackingMore API key; when empty, live status lookups are disabled.
+CONF_TRACKINGMORE_API_KEY = 'trackingmore_api_key'
 
 # Defaults
 DEFAULT_IMAP_SERVER = 'imap.gmail.com'
@@ -100,6 +102,48 @@ RETAILER_DISPLAY_NAMES = {
 STORE_KEY_MANUAL_PACKAGES = 'manual_packages'
 STORE_KEY_HIDDEN_TRACKING_NUMBERS = 'hidden_tracking_numbers'
 LEGACY_STORE_KEY_IGNORED = 'ignored_tracking_numbers'
+# Persists {tracking_number: {courier_code, delivery_status, ...}} for numbers
+# already registered with TrackingMore, so we don't re-register (re-spend credits).
+STORE_KEY_TRACKINGMORE = 'trackingmore'
+
+# --- TrackingMore live-status integration (optional) --------------------------
+TRACKINGMORE_BASE_URL = 'https://api.trackingmore.com/v4'
+# Seconds to wait for a TrackingMore API response.
+TRACKINGMORE_TIMEOUT = 15
+# TrackingMore allows ~3 create requests/second; pause between single creates.
+TRACKINGMORE_CREATE_DELAY = 0.35
+# Max tracking numbers per GET /trackings/get batch.
+TRACKINGMORE_GET_BATCH = 40
+# Cap on NEW registrations per poll cycle. A credit is spent per new number, and
+# free plans are as small as ~50 credits/month, so a burst of new packages must
+# not drain the whole budget in one cycle; remaining numbers register next cycle.
+TRACKINGMORE_MAX_NEW_PER_CYCLE = 10
+
+# Maps the integration's derived carrier_code (coordinator: carrier.lower()
+# .replace(' ', '_')) to TrackingMore courier codes. Packages whose carrier_code
+# is absent here are skipped (they're usually retailer order numbers, not
+# carrier-trackable). usps/ups/fedex/dhl are standard TrackingMore codes.
+TRACKINGMORE_COURIER_MAP = {
+    'usps': 'usps',
+    'ups': 'ups',
+    'fedex': 'fedex',
+    'dhl': 'dhl',
+    # 'swiss_post': 'post-ch',  # UNVERIFIED code; confirm via GET /couriers/all
+    #                             before enabling so we don't send a bad courier_code.
+}
+
+# TrackingMore delivery_status enum -> human-readable label written to `status`.
+TRACKINGMORE_STATUS_LABELS = {
+    'pending': 'Pending',
+    'notfound': 'Not Found',
+    'inforeceived': 'Info Received',
+    'transit': 'In Transit',
+    'pickup': 'Out for Pickup',
+    'delivered': 'Delivered',
+    'undelivered': 'Undelivered',
+    'exception': 'Exception',
+    'expired': 'Expired',
+}
 
    
 usps_pattern = [

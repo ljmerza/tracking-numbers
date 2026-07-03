@@ -25,6 +25,7 @@ from .const import (
     CONF_DAYS_OLD,
     CONF_SCAN_INTERVAL,
     CONF_MAX_PACKAGES,
+    CONF_TRACKINGMORE_API_KEY,
     DEFAULT_IMAP_SERVER,
     DEFAULT_IMAP_PORT,
     DEFAULT_USE_SSL,
@@ -143,6 +144,7 @@ class TrackingNumbersConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Optional(
                     CONF_MAX_PACKAGES, default=DEFAULT_MAX_PACKAGES
                 ): vol.All(cv.positive_int, vol.Range(min=10, max=500)),
+                vol.Optional(CONF_TRACKINGMORE_API_KEY): cv.string,
             }
         )
 
@@ -190,6 +192,10 @@ class TrackingNumbersOptionsFlowHandler(config_entries.OptionsFlow):
                     CONF_MAX_PACKAGES,
                     default=options.get(CONF_MAX_PACKAGES, DEFAULT_MAX_PACKAGES),
                 ): vol.All(cv.positive_int, vol.Range(min=10, max=500)),
+                vol.Optional(
+                    CONF_TRACKINGMORE_API_KEY,
+                    default=options.get(CONF_TRACKINGMORE_API_KEY, ""),
+                ): cv.string,
             }
         )
 

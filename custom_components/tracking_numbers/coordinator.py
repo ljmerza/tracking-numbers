@@ -1,6 +1,7 @@
 """DataUpdateCoordinator for Tracking Numbers integration."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta, date, datetime, timezone
 import logging
 from typing import Any
@@ -10,6 +11,7 @@ from imapclient import IMAPClient
 from mailparser import parse_from_bytes
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.helpers.storage import Store
 
@@ -24,6 +26,7 @@ from .const import (
     CONF_DAYS_OLD,
     CONF_SCAN_INTERVAL,
     CONF_MAX_PACKAGES,
+    CONF_TRACKINGMORE_API_KEY,
     DEFAULT_FOLDER,
     DEFAULT_DAYS_OLD,
     DEFAULT_SCAN_INTERVAL,
@@ -39,12 +42,17 @@ from .const import (
     MANUAL_CARRIER_FALLBACK,
     STORE_KEY_MANUAL_PACKAGES,
     STORE_KEY_HIDDEN_TRACKING_NUMBERS,
+    STORE_KEY_TRACKINGMORE,
     LEGACY_STORE_KEY_IGNORED,
     IMAP_CONNECTION_TIMEOUT,
+    TRACKINGMORE_COURIER_MAP,
+    TRACKINGMORE_CREATE_DELAY,
+    TRACKINGMORE_MAX_NEW_PER_CYCLE,
 )
 
 # Import parsers and helpers from shared module
 from .parsers_list import parsers, find_carrier, retailer_display_name
+from .trackingmore import TrackingMoreClient
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,6 +105,9 @@ class TrackingNumbersCoordinator(DataUpdateCoordinator):
             _LOGGER.debug("Fetched %d packages", len(auto_packages))
 
             packages = self._merge_manual_packages(auto_packages)
+
+            # Optionally enrich with live delivery status from TrackingMore.
+            packages = await self._enrich_with_trackingmore(packages)
 
             # Build summary statistics
             summary = self._build_summary(packages)
@@ -367,6 +378,96 @@ class TrackingNumbersCoordinator(DataUpdateCoordinator):
                 self.stored_data[STORE_KEY_HIDDEN_TRACKING_NUMBERS] = legacy
             else:
                 self.stored_data[STORE_KEY_HIDDEN_TRACKING_NUMBERS] = []
+        if not isinstance(self.stored_data.get(STORE_KEY_TRACKINGMORE), dict):
+            self.stored_data[STORE_KEY_TRACKINGMORE] = {}
+
+    async def _enrich_with_trackingmore(
+        self, packages: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
+        """Add live delivery status from TrackingMore when an API key is set.
+
+        No-ops (returns packages unchanged) when no key is configured, so default
+        behavior is identical to email-only operation. Registers each trackable
+        number once (1 credit) and reuses the free batch GET on later cycles.
+        """
+        api_key = self.options.get(
+            CONF_TRACKINGMORE_API_KEY, self.config.get(CONF_TRACKINGMORE_API_KEY)
+        )
+        if not api_key:
+            return packages
+
+        # Only real carriers we can map to a TrackingMore courier code; retailer
+        # order numbers (Amazon/Chewy/...) are skipped to avoid wasted credits.
+        trackable = [
+            pkg
+            for pkg in packages
+            if TRACKINGMORE_COURIER_MAP.get(pkg.get("carrier_code"))
+        ]
+        if not trackable:
+            return packages
+
+        registered: dict[str, Any] = self.stored_data.setdefault(
+            STORE_KEY_TRACKINGMORE, {}
+        )
+        client = TrackingMoreClient(async_get_clientsession(self.hass), api_key)
+        status_by_number: dict[str, dict[str, Any]] = {}
+
+        # 1) Register new numbers once (each costs a credit), capped per cycle.
+        new_this_cycle = 0
+        for pkg in trackable:
+            number = pkg["tracking_number"]
+            if number in registered:
+                continue
+            if new_this_cycle >= TRACKINGMORE_MAX_NEW_PER_CYCLE:
+                _LOGGER.debug(
+                    "TrackingMore: hit new-registration cap (%s) this cycle; "
+                    "remaining numbers register next cycle",
+                    TRACKINGMORE_MAX_NEW_PER_CYCLE,
+                )
+                break
+            courier_code = TRACKINGMORE_COURIER_MAP[pkg["carrier_code"]]
+            result = await client.create(number, courier_code)
+            if result is None:
+                continue  # failed; retry on a later cycle
+            registered[number] = {"courier_code": courier_code}
+            new_this_cycle += 1
+            if result:  # create&get returned live status in the same call
+                status_by_number[number] = result
+            await asyncio.sleep(TRACKINGMORE_CREATE_DELAY)
+
+        # 2) Batch-read status for registered numbers still present (no credit).
+        to_fetch = [
+            pkg["tracking_number"]
+            for pkg in trackable
+            if pkg["tracking_number"] in registered
+            and pkg["tracking_number"] not in status_by_number
+        ]
+        if to_fetch:
+            status_by_number.update(await client.get(to_fetch))
+
+        # 3) Write status onto packages; persist last-known for reuse.
+        now = datetime.now().isoformat()
+        for pkg in trackable:
+            number = pkg["tracking_number"]
+            fresh = status_by_number.get(number)
+            status = fresh or registered.get(number, {}).get("last_status")
+            if not status:
+                continue
+            if status.get("status"):
+                pkg["status"] = status["status"]
+            if status.get("delivery_status"):
+                pkg["delivery_status"] = status["delivery_status"]
+            if status.get("estimated_delivery"):
+                pkg["estimated_delivery"] = status["estimated_delivery"]
+            if fresh:
+                pkg["status_updated"] = now
+                registered.setdefault(number, {})["last_status"] = {
+                    "status": fresh.get("status"),
+                    "delivery_status": fresh.get("delivery_status"),
+                    "estimated_delivery": fresh.get("estimated_delivery"),
+                }
+
+        return packages
 
     @staticmethod
     def _normalize_datetime(dt: datetime | None) -> datetime | None:
