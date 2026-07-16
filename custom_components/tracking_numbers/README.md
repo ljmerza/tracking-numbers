@@ -219,6 +219,7 @@ automation:
 - USPS
 - DHL
 - Swiss Post
+- Canada Post
 
 ### Retailers (50+)
 Amazon, eBay, PayPal, AliExpress, Newegg, Best Buy, Home Depot, Inovelli, Lowe's, Target, Walmart, Chewy, Costway, Cradlewise, Groupon, GameStop, Nintendo, Sony, SwitchBot, Adafruit, Mixbook, Monoprice, B&H Photo, RockAuto, Wyze, Ubiquiti, Reolink, and many more...

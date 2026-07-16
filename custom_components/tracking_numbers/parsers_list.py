@@ -46,6 +46,7 @@ from .parsers.zazzle import ATTR_ZAZZLE, EMAIL_DOMAIN_ZAZZLE, parse_zazzle
 from .parsers.home_depot import ATTR_HOME_DEPOT, EMAIL_DOMAIN_HOME_DEPOT, parse_home_depot
 from .parsers.house_of_noa import ATTR_HOUSE_OF_NOA, EMAIL_DOMAIN_HOUSE_OF_NOA, parse_house_of_noa
 from .parsers.swiss_post import ATTR_SWISS_POST, EMAIL_DOMAIN_SWISS_POST, parse_swiss_post
+from .parsers.canada_post import ATTR_CANADA_POST, EMAIL_DOMAIN_CANADA_POST, parse_canada_post
 from .parsers.bespoke_post import ATTR_DSW as ATTR_BESPOKE, EMAIL_DOMAIN_DSW as EMAIL_DOMAIN_BESPOKE, parse_bespoke_post
 from .parsers.manta_sleep import ATTR_MANTA_SLEEP, EMAIL_DOMAIN_MANTA_SLEEP, parse_manta_sleep
 from .parsers.prusa import ATTR_PRUSA, EMAIL_DOMAIN_PRUSA, parse_prusa
@@ -110,6 +111,7 @@ parsers = [
     (ATTR_HOME_DEPOT, EMAIL_DOMAIN_HOME_DEPOT, parse_home_depot),
     (ATTR_HOUSE_OF_NOA, EMAIL_DOMAIN_HOUSE_OF_NOA, parse_house_of_noa),
     (ATTR_SWISS_POST, EMAIL_DOMAIN_SWISS_POST, parse_swiss_post),
+    (ATTR_CANADA_POST, EMAIL_DOMAIN_CANADA_POST, parse_canada_post),
     (ATTR_BESPOKE, EMAIL_DOMAIN_BESPOKE, parse_bespoke_post),
     (ATTR_MANTA_SLEEP, EMAIL_DOMAIN_MANTA_SLEEP, parse_manta_sleep),
     (ATTR_PRUSA, EMAIL_DOMAIN_PRUSA, parse_prusa),
@@ -148,6 +150,7 @@ EMAIL_DOMAIN_CARRIER_MAP = {
     EMAIL_DOMAIN_USPS: 'USPS',
     EMAIL_DOMAIN_DHL: 'DHL',
     EMAIL_DOMAIN_SWISS_POST: 'Swiss Post',
+    EMAIL_DOMAIN_CANADA_POST: 'Canada Post',
 }
 
 
