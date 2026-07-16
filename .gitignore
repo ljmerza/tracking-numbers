@@ -3,3 +3,5 @@ __pycache__/
 email.log
 .claude/
 custom_components/tracking_numbers/.claude/
+
+.data/

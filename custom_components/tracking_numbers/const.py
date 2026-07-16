@@ -71,6 +71,7 @@ TRACKING_NUMBER_URLS = {
   'fedex': "https://www.fedex.com/apps/fedextrack/?tracknumbers=",
   'dhl': 'https://www.logistics.dhl/us-en/home/tracking/tracking-parcel.html?submit=1&tracking-id=',
   'swiss_post': 'https://www.swisspost.ch/track?formattedParcelCodes=',
+  'canada_post': 'https://www.canadapost-postescanada.ca/track-reperage/en#/search?searchFor=',
   'unknown': 'https://www.google.com/search?q=',
 }
 
@@ -80,6 +81,7 @@ CARRIER_LINK_HINTS = {
   'FedEx': ('fedex.com', 'fxtracking', 'fedexdeliverymanager'),
   'DHL': ('dhl.com', 'dhl.de', 'dhlparcel', 'dhlglobalmail'),
   'Swiss Post': ('swisspost.ch', 'swiss-post', 'post.ch'),
+  'Canada Post': ('canadapost.ca', 'canadapost-postescanada.ca', 'track-reperage'),
 }
 
 MANUAL_RETAILER_CODE = 'manual_entry'

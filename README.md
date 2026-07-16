@@ -12,6 +12,7 @@ Supported Emails
 - B&H Photo
 - Bespoke Post
 - Best Buy
+- Canada Post
 - Chewy
 - Costway
 - Cradlewise
