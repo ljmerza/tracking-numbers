@@ -1,5 +1,16 @@
 # Home Assistant Email Sensor
 
+<p align="center">
+<img src="https://img.shields.io/github/stars/ljmerza/tracking-numbers?style=for-the-badge&label=Stars&color=orange" alt="Stars">
+<a href="https://github.com/ljmerza/tracking-numbers/releases/latest"><img src="https://img.shields.io/github/v/release/ljmerza/tracking-numbers?style=for-the-badge&color=purple" alt="Version"></a>
+<a href="https://github.com/ljmerza/tracking-numbers/actions/workflows/release-on-tag.yml"><img src="https://img.shields.io/github/actions/workflow/status/ljmerza/tracking-numbers/release-on-tag.yml?style=for-the-badge&label=Build" alt="Build"></a>
+<a href="https://github.com/ljmerza/tracking-numbers/blob/main/LICENSE"><img src="https://img.shields.io/github/license/ljmerza/tracking-numbers?style=for-the-badge&label=License&color=green" alt="License"></a>
+</p>
+
+<p align="center">
+<a href="https://www.buymeacoffee.com/JMISm06AD"><img src="https://img.shields.io/badge/Buy%20Me%20A%20Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me A Coffee"></a>
+</p>
+
 Gets emails from IMAP and parses out any tracking numbers. Goes well with the [tracking-number-card](https://github.com/ljmerza/tracking-number-card) for lovelace!
 
 Supported Emails
@@ -68,12 +79,6 @@ If you want support for tracking, forward me the email (ljmerza at gmail) and op
 
 ---
 
-[![GitHub Release][releases-shield]][releases]
-[![License][license-shield]](LICENSE.md)
-
-![Project Maintenance][maintenance-shield]
-[![GitHub Activity][commits-shield]][commits]
-
 ## Options
 
 | Name        | Type    | Requirement  | `default` Description                                                 |
@@ -110,17 +115,3 @@ Two providers are available:
 ## Manual Tracking Numbers
 
 If you have a package that is not captured via email, call the `tracking_numbers.add_manual_tracking_number` service (or use the lovelace card's add button) to save it alongside your parsed deliveries. Provide the target sensor's `entity_id`, the `tracking_number`, and optionally a `link`, `carrier`, `origin`, or `status` string. Use `tracking_numbers.remove_tracking_number` to delete a manual entry or hide a tracking number that was parsed from email.
-
----
-
-Enjoy my work? Help me out for a couple of :beers: or a :coffee:!
-
-<a href="https://www.buymeacoffee.com/JMISm06AD"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" height="41" width="174"></a>
-
-[commits-shield]: https://img.shields.io/github/commit-activity/y/ljmerza/tracking-numbers.svg?style=for-the-badge
-[commits]: https://github.com/ljmerza/tracking-numbers/commits/master
-[license-shield]: https://img.shields.io/github/license/ljmerza/tracking-numbers.svg?style=for-the-badge
-[maintenance-shield]: https://img.shields.io/badge/maintainer-Leonardo%20Merza%20%40ljmerza-blue.svg?style=for-the-badge
-[releases-shield]: https://img.shields.io/github/release/ljmerza/tracking-numbers.svg?style=for-the-badge
-[releases]: https://github.com/ljmerza/tracking-numbers/releases
-
