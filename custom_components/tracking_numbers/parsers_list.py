@@ -75,6 +75,7 @@ from .parsers.walmart import ATTR_WALMART, EMAIL_DOMAIN_WALMART, parse_walmart
 from .parsers.giri_designs import ATTR_GIRI_DESIGNS, EMAIL_DOMAIN_GIRI_DESIGNS, parse_giri_designs
 from .parsers.cradlewise import ATTR_CRADLEWISE, EMAIL_DOMAIN_CRADLEWISE, parse_cradlewise
 from .parsers.inovelli import ATTR_INOVELLI, EMAIL_DOMAIN_INOVELLI, parse_inovelli
+from .parsers.tcgplayer import ATTR_TCGPLAYER, EMAIL_DOMAIN_TCGPLAYER, parse_tcgplayer
 from .parsers.generic import ATTR_GENERIC, EMAIL_DOMAIN_GENERIC, parse_generic
 
 _LOGGER = logging.getLogger(__name__)
@@ -140,6 +141,7 @@ parsers = [
     (ATTR_GIRI_DESIGNS, EMAIL_DOMAIN_GIRI_DESIGNS, parse_giri_designs),
     (ATTR_CRADLEWISE, EMAIL_DOMAIN_CRADLEWISE, parse_cradlewise),
     (ATTR_INOVELLI, EMAIL_DOMAIN_INOVELLI, parse_inovelli),
+    (ATTR_TCGPLAYER, EMAIL_DOMAIN_TCGPLAYER, parse_tcgplayer),
     (ATTR_GENERIC, EMAIL_DOMAIN_GENERIC, parse_generic),
 ]
 
