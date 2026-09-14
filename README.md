@@ -52,6 +52,7 @@ Supported Emails
 - Swiss Post
 - SwitchBot
 - Target
+- TCGplayer
 - Thriftbooks
 - Timeless
 - The Smartest House
