@@ -16,6 +16,8 @@ EMAIL_DOMAIN_TCGPLAYER = 'tcgplayer.com'
 
 _TCGPLAYER_LINK_TEXT_RE = re.compile(r'Track\s+Your\s+Package\s*-+\s*([A-Z0-9]+)', re.IGNORECASE)
 _TCGPLAYER_LINK_HREF_RE = re.compile(r'shipment\.co/track/([A-Z0-9]+)', re.IGNORECASE)
+_TCGPLAYER_SHIPPED_RE = re.compile(r'has\s+shipped', re.IGNORECASE)
+_TCGPLAYER_ORDER_HREF_RE = re.compile(r'orderhistory\?SearchString=([A-Z0-9-]+)', re.IGNORECASE)
 _TCGPLAYER_TEXT_RES = (
     re.compile(USPS_TRACKING_NUMBER_REGEX),
     re.compile(UPS_TRACKING_NUMBER_REGEX),
@@ -61,6 +63,15 @@ def parse_tcgplayer(email):
         for regex in _TCGPLAYER_TEXT_RES:
             for match in regex.findall(text):
                 _add_tracking_number(match)
+
+    # Seller-shipped orders ("shipped ... without Delivery Confirmation") carry no tracking
+    # number; fall back to the seller order number and link to the order history.
+    if not tracking_numbers and _TCGPLAYER_SHIPPED_RE.search(subject):
+        for link_element in soup.find_all('a'):
+            href = (link_element.get('href') or '').strip()
+            match = _TCGPLAYER_ORDER_HREF_RE.search(href)
+            if match:
+                _add_tracking_number(match.group(1), href)
 
     _LOGGER.debug(f"[TCGplayer] Parser complete - Found {len(tracking_numbers)} tracking number(s)")
     return tracking_numbers

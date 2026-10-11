@@ -31,10 +31,13 @@ def parse_ali_express(email):
         if not link:
             continue
         order_number_match = re.search('orderId=(.*?)&', link)
+        if not order_number_match:
+            # Current notice.aliexpress.com template: ...&o_ids=<order id>&...
+            order_number_match = re.search(r'[?&]o_ids=(\d+)', link)
 
         if order_number_match and order_number_match.group(1):
             order_number = order_number_match.group(1)
-            order_numbers = list(map(lambda x: x['tracking_number'], tracking_numbers))
+            order_numbers = [x['tracking_number'] if isinstance(x, dict) else x for x in tracking_numbers]
             if order_number not in order_numbers:
                 tracking_numbers.append({
                     'link': link,

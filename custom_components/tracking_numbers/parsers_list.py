@@ -76,6 +76,10 @@ from .parsers.giri_designs import ATTR_GIRI_DESIGNS, EMAIL_DOMAIN_GIRI_DESIGNS, 
 from .parsers.cradlewise import ATTR_CRADLEWISE, EMAIL_DOMAIN_CRADLEWISE, parse_cradlewise
 from .parsers.inovelli import ATTR_INOVELLI, EMAIL_DOMAIN_INOVELLI, parse_inovelli
 from .parsers.tcgplayer import ATTR_TCGPLAYER, EMAIL_DOMAIN_TCGPLAYER, parse_tcgplayer
+from .parsers.smartwings import ATTR_SMARTWINGS, EMAIL_DOMAIN_SMARTWINGS, parse_smartwings
+from .parsers.navimow import ATTR_NAVIMOW, EMAIL_DOMAIN_NAVIMOW, parse_navimow
+from .parsers.sparkfun import ATTR_SPARKFUN, EMAIL_DOMAIN_SPARKFUN, parse_sparkfun
+from .parsers.steiff import ATTR_STEIFF, EMAIL_DOMAIN_STEIFF, parse_steiff
 from .parsers.generic import ATTR_GENERIC, EMAIL_DOMAIN_GENERIC, parse_generic
 
 _LOGGER = logging.getLogger(__name__)
@@ -142,6 +146,10 @@ parsers = [
     (ATTR_CRADLEWISE, EMAIL_DOMAIN_CRADLEWISE, parse_cradlewise),
     (ATTR_INOVELLI, EMAIL_DOMAIN_INOVELLI, parse_inovelli),
     (ATTR_TCGPLAYER, EMAIL_DOMAIN_TCGPLAYER, parse_tcgplayer),
+    (ATTR_SMARTWINGS, EMAIL_DOMAIN_SMARTWINGS, parse_smartwings),
+    (ATTR_NAVIMOW, EMAIL_DOMAIN_NAVIMOW, parse_navimow),
+    (ATTR_SPARKFUN, EMAIL_DOMAIN_SPARKFUN, parse_sparkfun),
+    (ATTR_STEIFF, EMAIL_DOMAIN_STEIFF, parse_steiff),
     (ATTR_GENERIC, EMAIL_DOMAIN_GENERIC, parse_generic),
 ]
 

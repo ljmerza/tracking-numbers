@@ -14,7 +14,8 @@ EMAIL_DOMAIN_HOME_DEPOT = 'homedepot.com'
 
 
 TRACKING_LABEL_RE = re.compile(r'tracking\s*number', re.IGNORECASE)
-TRACKING_LINE_RE = re.compile(r'(?:tracking\s*(?:number|#)\s*[:\-]?\s*)([A-Z0-9\s-]{8,})', re.IGNORECASE)
+TRACKING_LINE_RE = re.compile(r'(?:tracking\s*(?:number|#|id)\s*[:\-]?\s*)([A-Z0-9\s,-]{8,})', re.IGNORECASE)
+LTL_TRACKING_RE = re.compile(r'\d{9,10}')
 TRACKING_QUERY_KEYS = ('tracking', 'trackingnumber', 'tracking_number')
 ORDER_NUMBER_RE = re.compile(r'order\s*#\s*([A-Za-z]{2}\d{8})', re.IGNORECASE)
 TRACKING_REGEXES: tuple[re.Pattern[str], ...] = (
@@ -141,9 +142,22 @@ def _extract_tracking_candidates(text: str, require_label: bool) -> Iterable[str
 
     if require_label:
         for match in TRACKING_LINE_RE.finditer(text):
-            candidate = _normalize_tracking_candidate(match.group(1))
+            raw = match.group(1)
+            candidate = _normalize_tracking_candidate(raw)
             if candidate:
                 matches.append(candidate)
+                continue
+            # Several numbers may be listed comma-separated, optionally followed by other text.
+            for part in raw.split(','):
+                words = part.split()
+                if not words:
+                    continue
+                candidate = _normalize_tracking_candidate(part) or _normalize_tracking_candidate(words[0])
+                if not candidate and LTL_TRACKING_RE.fullmatch(words[0]):
+                    # Oversized freight (e.g. AAA Cooper) uses a bare 9-10 digit number.
+                    candidate = words[0]
+                if candidate:
+                    matches.append(candidate)
         return matches
 
     tokens = text.split()
