@@ -39,7 +39,7 @@ def parse_wayfair(email):
     for link_element in link_elements:
         link = link_element.get('href')
 
-        if not link or 'track_package' not in link:
+        if not link or not re.search(r'track[_-]package', link):
             continue
 
         _LOGGER.debug(f"Wayfair parser - Found track_package link: {link[:100]}")
@@ -54,6 +54,15 @@ def parse_wayfair(email):
             if order_id_match:
                 order_number = order_id_match.group(1)
                 _LOGGER.debug(f"Wayfair parser - Order number from link: {order_number}")
+
+        # track-package links carry no order id; use another link (e.g. post_order/sdi?order_id=...)
+        if not order_number:
+            for other in link_elements:
+                other_id_match = re.search(r'order_id=(?:3D)?(\d+)', other.get('href') or '')
+                if other_id_match:
+                    order_number = other_id_match.group(1)
+                    _LOGGER.debug(f"Wayfair parser - Order number from other link: {order_number}")
+                    break
 
         # Use order number as tracking number if available
         if order_number:
