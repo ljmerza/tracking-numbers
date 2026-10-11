@@ -49,6 +49,7 @@ Supported Emails
 - Mixbook
 - Moen
 - Monoprice
+- Navimow
 - NewEgg
 - Nintendo
 - Nuleaf
@@ -58,6 +59,9 @@ Supported Emails
 - Prusa
 - Reolink
 - Rockauto
+- SmartWings
+- SparkFun
+- Steiff
 - Sylvane
 - Sony
 - Swiss Post

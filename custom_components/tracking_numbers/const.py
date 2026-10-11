@@ -113,6 +113,8 @@ RETAILER_DISPLAY_NAMES = {
     'thrift_books': 'ThriftBooks',
     'switchbot': 'SwitchBot',
     'tcgplayer': 'TCGplayer',
+    'smartwings': 'SmartWings',
+    'sparkfun': 'SparkFun',
     'newegg': 'Newegg',
     'rockauto': 'RockAuto',
     'lowes': "Lowe's",
