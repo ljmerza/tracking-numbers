@@ -117,6 +117,23 @@ Two providers are available:
   credit per tracking number registered; each number is registered once and re-read for free afterward,
   with new registrations capped per cycle.
 
+## Delivery Dates from Email
+
+No setup needed: the integration also reads delivery dates out of the shipping emails themselves
+("Arriving Thursday", "Estimated Delivery: Oct 14", "Expected Delivery by Tuesday, September 22",
+"Delivered today") and adds them to each package:
+
+- `estimated_delivery` (`YYYY-MM-DD`) — with `estimated_delivery_source` set to `email`. When a live status
+  provider also returns a date, the live date wins and the source becomes `carrier`.
+- `delivered_date` (`YYYY-MM-DD`) — set when a "Delivered" email is seen.
+
+Relative wording ("today", "Thursday", "in 1-3 days") is resolved against the email's send date in your
+Home Assistant timezone; for a date range the later end is used. When several emails mention the same
+package, the newest email's date wins. Vague windows like "within 7-10 business days" are ignored.
+
+To check what the parsers extract from saved emails without running Home Assistant, put `.eml` files or
+JSON fixtures in `.data/` and run `python3 scripts/run_parsers.py` (see the script's docstring).
+
 ## Manual Tracking Numbers
 
 If you have a package that is not captured via email, call the `tracking_numbers.add_manual_tracking_number` service (or use the lovelace card's add button) to save it alongside your parsed deliveries. Provide the target sensor's `entity_id`, the `tracking_number`, and optionally a `link`, `carrier`, `origin`, or `status` string. Use `tracking_numbers.remove_tracking_number` to delete a manual entry or hide a tracking number that was parsed from email.

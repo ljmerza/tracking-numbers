@@ -112,7 +112,15 @@ The sensor provides a **flat packages array** optimized for custom cards:
 
 **Note on status fields:** `status`, `delivery_status`, `estimated_delivery`, and `status_updated` are
 only present when a TrackingMore API key is configured (or `status` when set manually). See
-[Live Delivery Status](#live-delivery-status-trackingmore).
+[Live Delivery Status](#live-delivery-status-trackingmore). `estimated_delivery` can also come from the
+email itself — see below.
+
+**Note on delivery dates from email:** when a shipping email states a delivery date ("Arriving Thursday",
+"Estimated Delivery: Oct 14", "Delivered today"), the package gets `estimated_delivery` (`YYYY-MM-DD`,
+with `"estimated_delivery_source": "email"`) and/or `delivered_date` (`YYYY-MM-DD`). A live status
+provider's date overrides the email one and sets `estimated_delivery_source` to `"carrier"`. Relative
+wording is resolved against the email's send date in your HA timezone; ranges use the later end; the
+newest email for a package wins.
 
 **Note on `retailer`:** the retailer is derived from which parser matched the shipment email, i.e. who sent the notification. When the retailer emails you directly (e.g. Amazon's shipment notification), `retailer` is the retailer. When only the carrier emails you (e.g. a bare USPS Informed Delivery alert with no retailer context), `retailer` will be the carrier name — there's no way to recover the original store from the carrier's email alone. Use `retailer_code` for stable filtering (e.g. `amazon_com`, `usps_com`); use `retailer` for display.
 

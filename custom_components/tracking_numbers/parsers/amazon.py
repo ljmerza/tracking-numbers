@@ -28,8 +28,9 @@ def parse_amazon(email):
     if not order_number_match:
         _LOGGER.debug("[Amazon] Old format not found, checking for new format: 'Shipped: ...'")
         # New format has subject like "Shipped: Product Name..."
-        # Check if subject starts with "Shipped:" to confirm it's a shipping email
-        if not re.search(r'^Shipped:', email[EMAIL_ATTR_SUBJECT]):
+        # Check if subject starts with "Shipped:" to confirm it's a shipping email;
+        # "Out for delivery:" / "Delivered:" updates carry the same Order # and delivery date
+        if not re.search(r'^(?:Shipped|Out for delivery|Delivered):', email[EMAIL_ATTR_SUBJECT]):
             _LOGGER.debug("[Amazon] Not a recognized Amazon shipping email format")
             return tracking_numbers
 
