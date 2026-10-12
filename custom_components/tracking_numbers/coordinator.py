@@ -7,6 +7,7 @@ import logging
 import time
 from typing import Any
 from email.utils import parsedate_to_datetime
+from zoneinfo import ZoneInfo
 
 from imapclient import IMAPClient
 from mailparser import parse_from_bytes
@@ -60,6 +61,13 @@ from .const import (
 
 # Import parsers and helpers from shared module
 from .parsers_list import parsers, find_carrier, retailer_display_name
+from .parsers.delivery_date import (
+    DELIVERY_DATE_KEYS,
+    ATTR_ESTIMATED_DELIVERY,
+    ATTR_DELIVERED_DATE,
+    apply_delivery_dates,
+    extract_delivery_dates,
+)
 from .trackingmore import TrackingMoreClient
 from .carriers import build_carrier_clients
 
@@ -222,10 +230,17 @@ class TrackingNumbersCoordinator(DataUpdateCoordinator):
 
         _LOGGER.info("Parsing %d emails for tracking numbers", len(emails))
 
+        # User's timezone, for resolving "today"/"Thursday" in delivery dates
+        try:
+            local_tz = ZoneInfo(self.hass.config.time_zone)
+        except Exception:  # pylint: disable=broad-except
+            local_tz = None
+
         # Run parsers on each email
         for email in emails:
             email_from = email[EMAIL_ATTR_FROM]
             delivered_at = email.get(EMAIL_ATTR_DATE)
+            email_dates = None
 
             if isinstance(email_from, (list, tuple)):
                 email_from = ''.join(list(email_from[0]))
@@ -238,6 +253,10 @@ class TrackingNumbersCoordinator(DataUpdateCoordinator):
                         if tracking_nums:
                             enriched = self._enrich_tracking_results(tracking_nums, delivered_at)
                             if enriched:
+                                # Parser-set dates win; fill the rest from the email text
+                                if email_dates is None:
+                                    email_dates = extract_delivery_dates(email, local_tz)
+                                apply_delivery_dates(enriched, email_dates)
                                 _LOGGER.debug(
                                     "Parser %s found %d tracking numbers from %s",
                                     ATTR,
@@ -265,6 +284,7 @@ class TrackingNumbersCoordinator(DataUpdateCoordinator):
 
         packages = []
         now = datetime.now().isoformat()
+        latest_dates = self._latest_delivery_dates(all_tracking_numbers)
 
         for ATTR, EMAIL_DOMAIN, _ in parsers:
             tracking_numbers = all_tracking_numbers.get(ATTR, [])
@@ -326,6 +346,20 @@ class TrackingNumbersCoordinator(DataUpdateCoordinator):
                 pkg_info['retailer_code'] = EMAIL_DOMAIN.replace('@', '').replace('.', '_')
                 pkg_info['carrier_code'] = pkg_info['carrier'].lower().replace(' ', '_')
 
+                # Delivery dates from email; keep a previous email-derived value
+                # when the email that carried it has aged out of the scan window
+                previous = known_packages.get(tracking_number, {})
+                dates = latest_dates.get(tracking_number, {})
+                estimated = dates.get(ATTR_ESTIMATED_DELIVERY)
+                if not estimated and previous.get('estimated_delivery_source') == 'email':
+                    estimated = previous.get(ATTR_ESTIMATED_DELIVERY)
+                if estimated:
+                    pkg_info[ATTR_ESTIMATED_DELIVERY] = estimated
+                    pkg_info['estimated_delivery_source'] = 'email'
+                delivered = dates.get(ATTR_DELIVERED_DATE) or previous.get(ATTR_DELIVERED_DATE)
+                if delivered:
+                    pkg_info[ATTR_DELIVERED_DATE] = delivered
+
                 packages.append(pkg_info)
 
                 # Update known packages
@@ -352,6 +386,27 @@ class TrackingNumbersCoordinator(DataUpdateCoordinator):
         }
 
         return packages
+
+    @staticmethod
+    def _latest_delivery_dates(
+        all_tracking_numbers: dict[str, list]
+    ) -> dict[str, dict[str, str]]:
+        """Per tracking number, each delivery date from the newest email that has one."""
+        latest: dict[str, dict[str, tuple[str, str]]] = {}
+        for items in all_tracking_numbers.values():
+            for item in items:
+                if not isinstance(item, dict) or not item.get('tracking_number'):
+                    continue
+                sent = item.get('email_timestamp') or ''
+                dates = latest.setdefault(item['tracking_number'], {})
+                for key in DELIVERY_DATE_KEYS:
+                    value = item.get(key)
+                    if value and (key not in dates or sent > dates[key][0]):
+                        dates[key] = (sent, value)
+        return {
+            number: {key: value for key, (_, value) in dates.items()}
+            for number, dates in latest.items()
+        }
 
     def _merge_manual_packages(self, auto_packages: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Merge auto and manual packages with manual overrides."""
@@ -433,6 +488,7 @@ class TrackingNumbersCoordinator(DataUpdateCoordinator):
             pkg["delivery_status"] = status["delivery_status"]
         if status.get("estimated_delivery"):
             pkg["estimated_delivery"] = status["estimated_delivery"]
+            pkg["estimated_delivery_source"] = "carrier"
         pkg["status_updated"] = updated
 
     async def _enrich_with_carriers(
@@ -583,6 +639,7 @@ class TrackingNumbersCoordinator(DataUpdateCoordinator):
                 pkg["delivery_status"] = status["delivery_status"]
             if status.get("estimated_delivery"):
                 pkg["estimated_delivery"] = status["estimated_delivery"]
+                pkg["estimated_delivery_source"] = "carrier"
             if fresh:
                 pkg["status_updated"] = now
                 registered.setdefault(number, {})["last_status"] = {
