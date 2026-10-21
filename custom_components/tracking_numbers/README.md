@@ -122,7 +122,9 @@ provider's date overrides the email one and sets `estimated_delivery_source` to 
 wording is resolved against the email's send date in your HA timezone; ranges use the later end; the
 newest email for a package wins.
 
-**Note on `retailer`:** the retailer is derived from which parser matched the shipment email, i.e. who sent the notification. When the retailer emails you directly (e.g. Amazon's shipment notification), `retailer` is the retailer. When only the carrier emails you (e.g. a bare USPS Informed Delivery alert with no retailer context), `retailer` will be the carrier name — there's no way to recover the original store from the carrier's email alone. Use `retailer_code` for stable filtering (e.g. `amazon_com`, `usps_com`); use `retailer` for display.
+**Note on `retailer`:** the retailer is derived from which parser matched the shipment email, i.e. who sent the notification. When the retailer emails you directly (e.g. Amazon's shipment notification), `retailer` is the retailer. When only the carrier emails you (e.g. a bare USPS Informed Delivery alert with no retailer context), `retailer` will be the carrier name — there's no way to recover the original store from the carrier's email alone. When both the retailer and the carrier email about the same tracking number, the retailer wins. Use `retailer_code` for stable filtering (e.g. `amazon_com`, `usps_com`); use `retailer` for display.
+
+**Note on order fields:** parsers that know the retailer order a shipment belongs to (currently TCGplayer and Stride Rite) add `order_number` and `order_link` (the retailer's order page). `link` stays the carrier tracking page. When a retailer only sends an order number (e.g. TCGplayer seller orders shipped without tracking), `tracking_number` and `order_number` are the same; that order-only entry is dropped once a real tracking number shows up for the same order.
 
 ### Custom Card Example
 
@@ -230,7 +232,7 @@ automation:
 - Canada Post
 
 ### Retailers (50+)
-Amazon, eBay, PayPal, AliExpress, Newegg, Best Buy, Home Depot, Inovelli, Lowe's, Target, TCGplayer, Walmart, Chewy, Costway, Cradlewise, Groupon, GameStop, Nintendo, Sony, SwitchBot, Adafruit, Mixbook, Monoprice, B&H Photo, RockAuto, Wyze, Ubiquiti, Reolink, and many more...
+Amazon, eBay, PayPal, AliExpress, Newegg, Best Buy, Home Depot, Inovelli, Lowe's, Target, TCGplayer, Walmart, Chewy, Costway, Cradlewise, Groupon, GameStop, Nintendo, Sony, SwitchBot, Adafruit, Mixbook, Monoprice, B&H Photo, RockAuto, Wyze, Ubiquiti, Reolink, Stride Rite, and many more...
 
 ## Troubleshooting
 

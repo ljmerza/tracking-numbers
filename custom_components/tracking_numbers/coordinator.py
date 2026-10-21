@@ -60,7 +60,8 @@ from .const import (
 )
 
 # Import parsers and helpers from shared module
-from .parsers_list import parsers, find_carrier, retailer_display_name
+from .parsers_list import parsers, find_carrier, retailer_display_name, EMAIL_DOMAIN_CARRIER_MAP
+from .parsers.generic import ATTR_GENERIC
 from .parsers.delivery_date import (
     DELIVERY_DATE_KEYS,
     ATTR_ESTIMATED_DELIVERY,
@@ -245,8 +246,11 @@ class TrackingNumbersCoordinator(DataUpdateCoordinator):
             if isinstance(email_from, (list, tuple)):
                 email_from = ''.join(list(email_from[0]))
 
-            # Run matching parsers
+            # Run matching parsers; generic (last) only scans emails nothing else found anything in
+            found_specific = False
             for ATTR, EMAIL_DOMAIN, parser in parsers:
+                if ATTR == ATTR_GENERIC and found_specific:
+                    continue
                 try:
                     if EMAIL_DOMAIN in email_from:
                         tracking_nums = parser(email=email)
@@ -264,6 +268,8 @@ class TrackingNumbersCoordinator(DataUpdateCoordinator):
                                     email_from,
                                 )
                                 all_tracking_numbers[ATTR].extend(enriched)
+                                if ATTR != ATTR_GENERIC:
+                                    found_specific = True
                 except Exception as err:
                     _LOGGER.error("Parser %s error: %s", ATTR, err)
 
@@ -286,6 +292,17 @@ class TrackingNumbersCoordinator(DataUpdateCoordinator):
         now = datetime.now().isoformat()
         latest_dates = self._latest_delivery_dates(all_tracking_numbers)
 
+        # Orders that also have a real tracking number (hidden ones included), so an
+        # order-only entry (tracking_number == order_number) for them can be dropped
+        tracked_orders = {
+            (attr, item['order_number'])
+            for attr, items in all_tracking_numbers.items()
+            for item in items
+            if isinstance(item, dict)
+            and item.get('order_number')
+            and item['order_number'] != item.get('tracking_number')
+        }
+
         for ATTR, EMAIL_DOMAIN, _ in parsers:
             tracking_numbers = all_tracking_numbers.get(ATTR, [])
 
@@ -304,6 +321,10 @@ class TrackingNumbersCoordinator(DataUpdateCoordinator):
 
                 # Skip ignored
                 if tracking_number in hidden_numbers:
+                    continue
+
+                # Skip an order-only entry once the order has a tracking number
+                if item.get('order_number') == tracking_number and (ATTR, tracking_number) in tracked_orders:
                     continue
 
                 # Get carrier info
@@ -349,6 +370,10 @@ class TrackingNumbersCoordinator(DataUpdateCoordinator):
                 # Delivery dates from email; keep a previous email-derived value
                 # when the email that carried it has aged out of the scan window
                 previous = known_packages.get(tracking_number, {})
+                # Keep the order from an earlier scan once its email ages out
+                for key in ('order_number', 'order_link'):
+                    if key not in pkg_info and previous.get(key):
+                        pkg_info[key] = previous[key]
                 dates = latest_dates.get(tracking_number, {})
                 estimated = dates.get(ATTR_ESTIMATED_DELIVERY)
                 if not estimated and previous.get('estimated_delivery_source') == 'email':
@@ -360,17 +385,25 @@ class TrackingNumbersCoordinator(DataUpdateCoordinator):
                 if delivered:
                     pkg_info[ATTR_DELIVERED_DATE] = delivered
 
-                packages.append(pkg_info)
+                packages.append((self._parser_rank(ATTR, EMAIL_DOMAIN), pkg_info))
 
                 # Update known packages
                 known_packages[tracking_number] = pkg_info
 
-        # Deduplicate by tracking_number (keep most recent)
+        # Deduplicate by tracking_number. A store's parser beats a carrier's, which
+        # beats generic (the store knows the order); the others fill in gaps.
         seen = {}
-        for pkg in packages:
+        for _, pkg in sorted(packages, key=lambda ranked: ranked[0]):
             tracking_number = pkg['tracking_number']
-            if tracking_number not in seen:
+            kept = seen.get(tracking_number)
+            if kept is None:
                 seen[tracking_number] = pkg
+                continue
+            for key in ('order_number', 'order_link'):
+                if key not in kept and pkg.get(key):
+                    kept[key] = pkg[key]
+            if pkg.get('first_seen') and pkg['first_seen'] < kept.get('first_seen', pkg['first_seen']):
+                kept['first_seen'] = pkg['first_seen']
 
         packages = list(seen.values())
 
@@ -386,6 +419,15 @@ class TrackingNumbersCoordinator(DataUpdateCoordinator):
         }
 
         return packages
+
+    @staticmethod
+    def _parser_rank(attr: str, email_domain: str) -> int:
+        """Dedup priority of a parser: store (0) < carrier (1) < generic (2)."""
+        if attr == ATTR_GENERIC:
+            return 2
+        if email_domain in EMAIL_DOMAIN_CARRIER_MAP:
+            return 1
+        return 0
 
     @staticmethod
     def _latest_delivery_dates(
