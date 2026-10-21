@@ -8,7 +8,8 @@ Inputs (default: .data/fixtures/*.json, .data/*.eml, email.log):
 
   *.json  fixture: {"from", "subject", "date" (naive UTC ISO), "body" (HTML),
           optional "expected": {"tracking_numbers": [...],
-          "estimated_delivery": "YYYY-MM-DD"|null, "delivered_date": ...|null}}
+          "estimated_delivery": "YYYY-MM-DD"|null, "delivered_date": ...|null,
+          "order_number": "..."|null}}
   *.eml   raw RFC 822 message
   *.log   Gmail "Show original" dump (preamble before Delivered-To: is skipped)
 
@@ -117,6 +118,9 @@ def run_email(data: dict, parsers_list, delivery_date, tz) -> list[tuple[str, di
     for attr, email_domain, parser in parsers_list.parsers:
         if email_domain not in email[EMAIL_ATTR_FROM]:
             continue
+        # Generic is a fallback: skipped once a specific parser found something
+        if attr == "generic" and results:
+            continue
         try:
             found = parser(email=email)
         except Exception as err:  # pylint: disable=broad-except
@@ -146,7 +150,7 @@ def check(expected: dict, results: list[tuple[str, dict]]) -> list[str]:
         if item is None:
             failures.append(f"missing tracking number {number}")
             continue
-        for key in ("estimated_delivery", "delivered_date"):
+        for key in ("estimated_delivery", "delivered_date", "order_number"):
             if key not in expected:
                 continue
             if item.get(key) != expected[key]:
@@ -182,7 +186,8 @@ def main() -> int:
         for attr, item in shown:
             dates = ", ".join(f"{k}={item[k]}" for k in delivery_date.DELIVERY_DATE_KEYS if item.get(k))
             label = item.get("error") or item.get("tracking_number")
-            print(f"   [{attr}] {label}" + (f"  ({dates})" if dates else ""))
+            order = f"  order={item['order_number']}" if item.get("order_number") else ""
+            print(f"   [{attr}] {label}{order}" + (f"  ({dates})" if dates else ""))
 
         expected = data.get("expected")
         if expected is not None:

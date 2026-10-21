@@ -62,6 +62,7 @@ Supported Emails
 - SmartWings
 - SparkFun
 - Steiff
+- Stride Rite
 - Sylvane
 - Sony
 - Swiss Post

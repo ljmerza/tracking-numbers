@@ -80,6 +80,7 @@ from .parsers.smartwings import ATTR_SMARTWINGS, EMAIL_DOMAIN_SMARTWINGS, parse_
 from .parsers.navimow import ATTR_NAVIMOW, EMAIL_DOMAIN_NAVIMOW, parse_navimow
 from .parsers.sparkfun import ATTR_SPARKFUN, EMAIL_DOMAIN_SPARKFUN, parse_sparkfun
 from .parsers.steiff import ATTR_STEIFF, EMAIL_DOMAIN_STEIFF, parse_steiff
+from .parsers.stride_rite import ATTR_STRIDE_RITE, EMAIL_DOMAIN_STRIDE_RITE, parse_stride_rite
 from .parsers.generic import ATTR_GENERIC, EMAIL_DOMAIN_GENERIC, parse_generic
 
 _LOGGER = logging.getLogger(__name__)
@@ -150,6 +151,7 @@ parsers = [
     (ATTR_NAVIMOW, EMAIL_DOMAIN_NAVIMOW, parse_navimow),
     (ATTR_SPARKFUN, EMAIL_DOMAIN_SPARKFUN, parse_sparkfun),
     (ATTR_STEIFF, EMAIL_DOMAIN_STEIFF, parse_steiff),
+    (ATTR_STRIDE_RITE, EMAIL_DOMAIN_STRIDE_RITE, parse_stride_rite),
     (ATTR_GENERIC, EMAIL_DOMAIN_GENERIC, parse_generic),
 ]
 
@@ -256,9 +258,16 @@ def find_carrier(tracking_group, email_domain):
         prefix, _, remainder = final_link.partition('qtc_tLabels1')
         final_link = f"{prefix}qtc_tLabels1={tracking_number}"
 
-    return {
+    pkg_info = {
         'tracking_number': tracking_number,
         'carrier': tracking_group.get('carrier') or carrier,
         'origin': tracking_group.get('origin') or email_domain or carrier,
         'link': final_link,
     }
+
+    # Retailer order the package belongs to (optional, set by retailer parsers)
+    for key in ('order_number', 'order_link'):
+        if tracking_group.get(key):
+            pkg_info[key] = tracking_group[key]
+
+    return pkg_info
