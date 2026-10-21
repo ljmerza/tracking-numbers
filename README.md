@@ -1,4 +1,4 @@
-# Home Assistant Email Sensor
+# Tracking Numbers Integration
 
 <p align="center">
 <img src="https://img.shields.io/github/stars/ljmerza/tracking-numbers?style=for-the-badge&label=Stars&color=orange" alt="Stars">
