@@ -22,7 +22,7 @@ def parse_ali_express(email):
     for line in lines:
         if not line:
             continue
-        match = re.search('TRACKING NUMBER :(.*?)\.', line)
+        match = re.search(r'TRACKING NUMBER :(.*?)\.', line)
         if match and match.group(1) not in tracking_numbers:
             tracking_numbers.append(match.group(1))
     

@@ -4,9 +4,6 @@ import re
 from urllib.parse import urlparse
 
 from .const import (
-    EMAIL_ATTR_FROM,
-    EMAIL_ATTR_SUBJECT,
-    EMAIL_ATTR_BODY,
     TRACKING_NUMBER_URLS,
     CARRIER_LINK_HINTS,
     RETAILER_DISPLAY_NAMES,

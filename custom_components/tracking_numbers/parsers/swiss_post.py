@@ -20,7 +20,7 @@ def parse_swiss_post(email):
     for link in links:
         if not link:
             continue
-        match = re.search('formattedParcelCodes=(\d+)', link)
+        match = re.search(r'formattedParcelCodes=(\d+)', link)
         if match and match.group(1) not in tracking_numbers:
             tracking_numbers.append(match.group(1))
 
