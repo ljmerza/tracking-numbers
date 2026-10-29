@@ -20,6 +20,7 @@ Supported Emails
 - Amazon
 - Amazon DE
 - Ali Express
+- Alibaba
 - B&H Photo
 - Bespoke Post
 - Best Buy

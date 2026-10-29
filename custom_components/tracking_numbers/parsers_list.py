@@ -20,6 +20,7 @@ from .parsers.fedex import ATTR_FEDEX, EMAIL_DOMAIN_FEDEX, parse_fedex
 from .parsers.paypal import ATTR_PAYPAL, EMAIL_DOMAIN_PAYPAL, parse_paypal
 from .parsers.usps import ATTR_USPS, EMAIL_DOMAIN_USPS, parse_usps
 from .parsers.ali_express import ATTR_ALI_EXPRESS, EMAIL_DOMAIN_ALI_EXPRESS, parse_ali_express
+from .parsers.alibaba import ATTR_ALIBABA, EMAIL_DOMAIN_ALIBABA, parse_alibaba
 from .parsers.newegg import ATTR_NEWEGG, EMAIL_DOMAIN_NEWEGG, parse_newegg
 from .parsers.rockauto import ATTR_ROCKAUTO, EMAIL_DOMAIN_ROCKAUTO, parse_rockauto
 from .parsers.bh_photo import ATTR_BH_PHOTO, EMAIL_DOMAIN_BH_PHOTO, parse_bh_photo
@@ -91,6 +92,7 @@ parsers = [
     (ATTR_PAYPAL, EMAIL_DOMAIN_PAYPAL, parse_paypal),
     (ATTR_USPS, EMAIL_DOMAIN_USPS, parse_usps),
     (ATTR_ALI_EXPRESS, EMAIL_DOMAIN_ALI_EXPRESS, parse_ali_express),
+    (ATTR_ALIBABA, EMAIL_DOMAIN_ALIBABA, parse_alibaba),
     (ATTR_NEWEGG, EMAIL_DOMAIN_NEWEGG, parse_newegg),
     (ATTR_ROCKAUTO, EMAIL_DOMAIN_ROCKAUTO, parse_rockauto),
     (ATTR_BH_PHOTO, EMAIL_DOMAIN_BH_PHOTO, parse_bh_photo),
