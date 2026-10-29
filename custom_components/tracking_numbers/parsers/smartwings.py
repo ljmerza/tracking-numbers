@@ -22,6 +22,13 @@ _LABELED_TRACKING_RE = re.compile(
 )
 _UPS_RE = re.compile(UPS_TRACKING_NUMBER_REGEX)
 _USPS_RE = re.compile(USPS_TRACKING_NUMBER_REGEX)
+# "Order #138440" in the subject and header of every Shopify email
+_ORDER_RE = re.compile(r'\border\s+#\s*(\d+)\b', re.IGNORECASE)
+# "Order #138440 confirmed" / "Thank you for your order!"
+_CONFIRMED_RE = re.compile(r'\border\s+#\s*\d+\s+confirmed\b|thank\s+you\s+for\s+your\s+order', re.IGNORECASE)
+# The email's "View your order" link is a click-tracking redirect to a URL with an
+# auth key, so link to the account's order list instead.
+_ORDER_LINK = 'https://www.smartwingshome.com/account'
 
 
 def parse_smartwings(email):
@@ -29,7 +36,8 @@ def parse_smartwings(email):
 
     Handles both "A shipment from order #N is on the way" and "... has been
     delivered" emails, which carry ``UPS® tracking number: 1Z...``. Order
-    confirmation emails carry no tracking number and return an empty list.
+    confirmation emails carry no tracking number and yield an order-only entry
+    (``tracking_number == order_number``) until the shipment email arrives.
     """
     tracking_numbers = []
     subject = email.get(EMAIL_ATTR_SUBJECT, 'N/A') or 'N/A'
@@ -41,6 +49,15 @@ def parse_smartwings(email):
         _LOGGER.debug("[SmartWings] Empty email body received; skipping")
         return tracking_numbers
 
+    soup = BeautifulSoup(body, 'html.parser')
+    text = soup.get_text(' ', strip=True)
+
+    order_number = None
+    match = _ORDER_RE.search(subject) or _ORDER_RE.search(text)
+    if match:
+        order_number = match.group(1)
+        _LOGGER.debug(f"[SmartWings] Found order number: {order_number}")
+
     def _add_tracking_number(number):
         number = number.strip().upper()
         if not number or number in [x['tracking_number'] for x in tracking_numbers]:
@@ -50,11 +67,11 @@ def parse_smartwings(email):
             entry['link'] = f"{TRACKING_NUMBER_URLS['ups']}{number}"
         elif _USPS_RE.fullmatch(number):
             entry['link'] = f"{TRACKING_NUMBER_URLS['usps']}{number}"
+        if order_number:
+            entry['order_number'] = order_number
+            entry['order_link'] = _ORDER_LINK
         tracking_numbers.append(entry)
         _LOGGER.debug(f"[SmartWings] Found tracking number: {number}")
-
-    soup = BeautifulSoup(body, 'html.parser')
-    text = soup.get_text(' ', strip=True)
 
     for match in _LABELED_TRACKING_RE.finditer(text):
         candidate = match.group(1)
@@ -66,6 +83,12 @@ def parse_smartwings(email):
     if not tracking_numbers:
         for number in _UPS_RE.findall(text):
             _add_tracking_number(number)
+
+    # Order confirmation: no tracking number yet, so track the order itself
+    if not tracking_numbers and order_number and (
+        _CONFIRMED_RE.search(subject) or _CONFIRMED_RE.search(text)
+    ):
+        _add_tracking_number(order_number)
 
     _LOGGER.debug(f"[SmartWings] Parser complete - Found {len(tracking_numbers)} tracking number(s)")
     return tracking_numbers
