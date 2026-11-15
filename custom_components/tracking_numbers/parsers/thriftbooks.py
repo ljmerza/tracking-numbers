@@ -20,6 +20,8 @@ track_copy_pattern = re.compile(r"track\s+(?:my\s+)?package", re.IGNORECASE)
 order_number_patterns = (
     re.compile(r"Order\s*#\s*:?\s*(\d+)", re.IGNORECASE),
     re.compile(r"Order\s+Number\s*:?\s*#?\s*(\d+)", re.IGNORECASE),
+    # Narvar-era emails use alphanumeric order IDs, e.g. "Order Number: FXHG29AM3ZWC"
+    re.compile(r"(?i:Order\s+Number)\s*:?\s*#?\s*((?=[A-Z0-9]*\d)[A-Z0-9]{8,})\b"),
 )
 order_number_neighbor_pattern = re.compile(r"\b(\d{6,})\b")
 # Strings under these tags never render, so digits in them (CSS colors like
