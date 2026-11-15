@@ -3,6 +3,7 @@ import quopri
 import re
 
 from bs4 import BeautifulSoup
+from bs4.element import PreformattedString
 from ..const import (
     EMAIL_ATTR_BODY,
     FEDEX_TRACKING_NUMBER_REGEX,
@@ -20,6 +21,10 @@ order_number_patterns = (
     re.compile(r"Order\s*#\s*:?\s*(\d+)", re.IGNORECASE),
     re.compile(r"Order\s+Number\s*:?\s*#?\s*(\d+)", re.IGNORECASE),
 )
+order_number_neighbor_pattern = re.compile(r"\b(\d{6,})\b")
+# Strings under these tags never render, so digits in them (CSS colors like
+# #999999, script constants) are not order numbers.
+non_visible_tags = {'style', 'script', 'head', 'title', 'meta'}
 tracking_regexes = (
     re.compile(USPS_TRACKING_NUMBER_REGEX),
     re.compile(UPS_TRACKING_NUMBER_REGEX),
@@ -102,9 +107,15 @@ def parse_thrift_books(email):
 
     if not order_numbers:
         for label in soup.find_all(string=re.compile(r"order\s*(?:number|#)", re.IGNORECASE)):
-            neighbor = label.find_next(string=re.compile(r"\d{6,}"))
-            if neighbor:
-                order_numbers.add(neighbor.strip())
+            for neighbor in label.find_all_next(string=order_number_neighbor_pattern):
+                # Skip HTML comments (e.g. Outlook <!--[if mso]> blocks) and other
+                # non-rendered strings, and keep only the digit run, not the whole string
+                if isinstance(neighbor, PreformattedString):
+                    continue
+                if neighbor.parent is not None and neighbor.parent.name in non_visible_tags:
+                    continue
+                order_numbers.add(order_number_neighbor_pattern.search(neighbor).group(1))
+                break
 
     for order_number in order_numbers:
         _add_entry(order_number, track_link)
