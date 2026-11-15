@@ -10,6 +10,7 @@ from ..const import (
     UPS_TRACKING_NUMBER_REGEX,
     USPS_TRACKING_NUMBER_REGEX,
 )
+from .delivery_date import ATTR_ESTIMATED_DELIVERY, _DATE_PATTERN, _reference_date, _resolve
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,6 +28,10 @@ order_number_neighbor_pattern = re.compile(r"\b(\d{6,})\b")
 # Strings under these tags never render, so digits in them (CSS colors like
 # #999999, script constants) are not order numbers.
 non_visible_tags = {'style', 'script', 'head', 'title', 'meta'}
+# Narvar shipped emails put the expected arrival date right after the button:
+# "Track Package Tuesday, November 24". The shared extractor misses it because
+# the "expected arrival" wording sits far above the date.
+track_button_pattern = re.compile(r"Track\s+Package\s+", re.IGNORECASE)
 tracking_regexes = (
     re.compile(USPS_TRACKING_NUMBER_REGEX),
     re.compile(UPS_TRACKING_NUMBER_REGEX),
@@ -121,6 +126,17 @@ def parse_thrift_books(email):
 
     for order_number in order_numbers:
         _add_entry(order_number, track_link)
+
+    if tracking_entries:
+        for button in track_button_pattern.finditer(text):
+            date_match = _DATE_PATTERN.match(text, button.end())
+            if not date_match:
+                continue
+            estimate = _resolve(date_match, _reference_date(email, None), past=False)
+            if estimate:
+                for entry in tracking_entries:
+                    entry[ATTR_ESTIMATED_DELIVERY] = estimate.isoformat()
+            break
 
     _LOGGER.debug(f"[Thriftbooks] Parser complete - Found {len(tracking_entries)} tracking number(s)")
     return tracking_entries
